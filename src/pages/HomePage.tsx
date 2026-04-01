@@ -30,6 +30,7 @@ export function HomePage() {
 
         setProfile(profileResponse.data)
         setProjects(projectResponse.data)
+        setErrorMessage('')
       })
       .catch(() => {
         setErrorMessage('홈 데이터를 불러오지 못했습니다.')
