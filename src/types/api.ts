@@ -38,3 +38,50 @@ export type Profile = {
   strengths: string[]
   links: Record<string, string>
 }
+
+export type AssistantBriefing = {
+  generatedAt: string
+  summary: string
+  weather: {
+    location: string
+    condition: string
+    temperatureCelsius: number
+  }
+  calendar: Array<{
+    time: string
+    title: string
+  }>
+  headlines: Array<{
+    source: string
+    title: string
+  }>
+  tasks: Array<{
+    priority: string
+    title: string
+  }>
+  focusSuggestion: string
+}
+
+export type AssistantPlan = {
+  date: string
+  topPriorities: string[]
+  timeBlocks: Array<{
+    start: string
+    end: string
+    activity: string
+  }>
+  reminders: string[]
+}
+
+export type AssistantIdea = {
+  id: string
+  title: string
+  rawText: string
+  summary: string
+  keyPoints: string[]
+  suggestedActions: string[]
+  tags: string[]
+  status: string
+  createdAt: string
+  updatedAt: string
+}

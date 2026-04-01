@@ -49,6 +49,9 @@ export function HomePage() {
             <Link className="primary-link" to="/about">
               About Me
             </Link>
+            <Link className="secondary-link" to="/assistant">
+              AI Assistant
+            </Link>
             {profile?.links.github ? (
               <a className="secondary-link" href={profile.links.github} target="_blank" rel="noreferrer">
                 GitHub

@@ -11,6 +11,7 @@
 ## What Included
 - 공개 홈 화면
 - About 페이지
+- AI 비서 대시보드 페이지
 - 백엔드 `profile/projects` API 연동
 - 프로젝트 카드별 `Live / Repository / Docs` 링크 노출
 - 기존 로그인 페이지는 내부 실험용으로 유지
@@ -64,6 +65,7 @@ src
 ## Routes
 - `/`: public home hub
 - `/about`: public about page
+- `/assistant`: AI 비서 대시보드
 - `/login`: login form
 
 ## Environment
@@ -71,6 +73,7 @@ src
 ```bash
 VITE_APP_NAME=giwon-home
 VITE_API_BASE_URL=http://localhost:8081
+VITE_ASSISTANT_API_BASE_URL=http://localhost:8080
 ```
 
 - 로컬 Vite 개발 서버에서는 `http://localhost:8081`을 그대로 쓴다.
