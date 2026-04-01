@@ -5,9 +5,19 @@ type ProjectGridProps = {
 }
 
 export function ProjectGrid({ projects }: ProjectGridProps) {
+  const sortedProjects = [...projects].sort((left, right) => {
+    const priority = {
+      LIVE: 0,
+      BUILDING: 1,
+      PLANNING: 2,
+    }
+
+    return priority[left.status as keyof typeof priority] - priority[right.status as keyof typeof priority]
+  })
+
   return (
     <section className="project-grid">
-      {projects.map((project) => (
+      {sortedProjects.map((project) => (
         <article key={project.id} className="project-card">
           <div className="project-card-header">
             <div>
@@ -30,7 +40,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
             </a>
             {project.repositoryUrl ? (
               <a href={project.repositoryUrl} target="_blank" rel="noreferrer">
-                Backend Repo
+                Repository
               </a>
             ) : null}
           </div>

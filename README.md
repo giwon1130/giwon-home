@@ -1,4 +1,4 @@
-# Home Frontend Template
+# giwon-home
 
 공개용 프로젝트 허브와 자기소개 페이지를 위한 React + Vite + TypeScript 프론트엔드입니다.
 

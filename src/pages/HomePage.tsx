@@ -11,6 +11,10 @@ export function HomePage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [errorMessage, setErrorMessage] = useState('')
 
+  const liveCount = projects.filter((project) => project.status === 'LIVE').length
+  const buildingCount = projects.filter((project) => project.status === 'BUILDING').length
+  const planningCount = projects.filter((project) => project.status === 'PLANNING').length
+
   useEffect(() => {
     Promise.all([getProfileApi(), getProjectsApi()])
       .then(([profileResponse, projectResponse]) => {
@@ -63,6 +67,48 @@ export function HomePage() {
       </header>
 
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
+
+      <section className="stats-grid">
+        <article className="stat-card">
+          <span className="control-label">Projects</span>
+          <strong>{projects.length}</strong>
+          <p>공개 허브에 연결된 프로젝트 수</p>
+        </article>
+        <article className="stat-card">
+          <span className="control-label">Live</span>
+          <strong>{liveCount}</strong>
+          <p>바로 확인 가능한 프로젝트</p>
+        </article>
+        <article className="stat-card">
+          <span className="control-label">Building</span>
+          <strong>{buildingCount}</strong>
+          <p>현재 확장 중인 프로젝트</p>
+        </article>
+        <article className="stat-card">
+          <span className="control-label">Planning</span>
+          <strong>{planningCount}</strong>
+          <p>다음 단계로 준비 중인 아이디어</p>
+        </article>
+      </section>
+
+      {profile ? (
+        <section className="section-block">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Links</p>
+              <h2>바로가기</h2>
+            </div>
+          </div>
+          <div className="quick-link-grid">
+            {Object.entries(profile.links).map(([label, href]) => (
+              <a key={label} className="quick-link-card" href={href} target="_blank" rel="noreferrer">
+                <span className="control-label">{label}</span>
+                <strong>{href.replace(/^https?:\/\//, '')}</strong>
+              </a>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="section-block">
         <div className="section-heading">
