@@ -13,6 +13,9 @@ export function AssistantPage() {
   const [tags, setTags] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null)
 
   const formatDateTime = (value: string) =>
     new Date(value).toLocaleString('ko-KR', {
@@ -22,7 +25,13 @@ export function AssistantPage() {
       minute: '2-digit',
     })
 
-  const loadAssistantData = () => {
+  const loadAssistantData = async (options?: { silent?: boolean }) => {
+    if (options?.silent) {
+      setIsRefreshing(true)
+    } else {
+      setIsLoading(true)
+    }
+
     Promise.all([getTodayBriefingApi(), getBriefingHistoryApi(), getTodayPlanApi(), getIdeasApi()])
       .then(([briefingResponse, historyResponse, planResponse, ideasResponse]) => {
         if (!briefingResponse.success || !briefingResponse.data) {
@@ -49,6 +58,10 @@ export function AssistantPage() {
       })
       .catch(() => {
         setErrorMessage('AI 비서 데이터를 불러오지 못했습니다. giwon-assistant-api 실행 상태를 확인해줘.')
+      })
+      .finally(() => {
+        setIsLoading(false)
+        setIsRefreshing(false)
       })
   }
 
@@ -92,6 +105,9 @@ export function AssistantPage() {
     }
   }
 
+  const latestHistory = briefingHistory[0]
+  const recentIdeasCount = ideas.filter((idea) => idea.status === 'OPEN' || idea.status === 'IN_PROGRESS').length
+
   return (
     <main className="page-shell">
       <header className="assistant-hero">
@@ -102,6 +118,14 @@ export function AssistantPage() {
             아침 브리핑, 오늘 계획, 아이디어 저장을 한 화면에서 다루는 개인용 보조 공간
           </p>
           <div className="hero-actions">
+            <button
+              className="secondary-link action-button"
+              type="button"
+              onClick={() => loadAssistantData({ silent: true })}
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? '새로고침 중...' : '새로고침'}
+            </button>
             <Link className="secondary-link" to="/">
               Back Home
             </Link>
@@ -115,10 +139,37 @@ export function AssistantPage() {
               ? `${briefing.weather.condition} · ${briefing.weather.temperatureCelsius}°C`
               : '연결 대기 중'}
           </p>
+          <div className="assistant-status-meta">
+            <span>최근 브리핑 {briefing ? formatDateTime(briefing.generatedAt) : '-'}</span>
+            <span>열린 아이디어 {recentIdeasCount}건</span>
+          </div>
         </div>
       </header>
 
       {errorMessage ? <p className="form-error">{errorMessage}</p> : null}
+
+      <section className="assistant-stats-grid">
+        <article className="assistant-stat-card">
+          <span className="control-label">Today</span>
+          <strong>{briefing?.tasks.length ?? 0}</strong>
+          <p>오늘 브리핑에 포함된 주요 작업 수</p>
+        </article>
+        <article className="assistant-stat-card">
+          <span className="control-label">Plan Blocks</span>
+          <strong>{plan?.timeBlocks.length ?? 0}</strong>
+          <p>시간 블록 기준으로 정리된 오늘 계획</p>
+        </article>
+        <article className="assistant-stat-card">
+          <span className="control-label">Saved Briefings</span>
+          <strong>{briefingHistory.length}</strong>
+          <p>최근에 저장된 브리핑 이력</p>
+        </article>
+        <article className="assistant-stat-card">
+          <span className="control-label">Ideas</span>
+          <strong>{ideas.length}</strong>
+          <p>보관 중인 아이디어 아카이브 수</p>
+        </article>
+      </section>
 
       <section className="assistant-grid">
         <article className="assistant-card">
@@ -128,7 +179,9 @@ export function AssistantPage() {
               <h2>오늘 브리핑</h2>
             </div>
           </div>
-          <p className="assistant-summary">{briefing?.summary ?? '브리핑을 불러오는 중'}</p>
+          <p className="assistant-summary">
+            {briefing ? briefing.summary : isLoading ? '브리핑을 불러오는 중' : '브리핑 정보 없음'}
+          </p>
           <div className="assistant-subgrid">
             <div>
               <span className="control-label">Calendar</span>
@@ -184,6 +237,57 @@ export function AssistantPage() {
               </span>
             ))}
           </div>
+          <div className="assistant-secondary-section">
+            <span className="control-label">Reminders</span>
+            <ul className="assistant-list compact-list">
+              {plan?.reminders.length ? (
+                plan.reminders.map((reminder) => <li key={reminder}>{reminder}</li>)
+              ) : (
+                <li>추가 리마인더 없음</li>
+              )}
+            </ul>
+          </div>
+        </article>
+      </section>
+
+      <section className="assistant-grid">
+        <article className="assistant-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Signals</p>
+              <h2>헤드라인 및 빠른 판단</h2>
+            </div>
+          </div>
+          <div className="assistant-subgrid">
+            <div>
+              <span className="control-label">Headlines</span>
+              <ul className="assistant-list">
+                {briefing?.headlines.length ? (
+                  briefing.headlines.map((headline) => (
+                    <li key={`${headline.source}-${headline.title}`}>
+                      <strong>{headline.source}</strong>
+                      <span>{headline.title}</span>
+                    </li>
+                  ))
+                ) : (
+                  <li>헤드라인 없음</li>
+                )}
+              </ul>
+            </div>
+            <div>
+              <span className="control-label">Quick Summary</span>
+              <div className="assistant-insight-panel">
+                <p>{latestHistory?.summary ?? briefing?.summary ?? '아직 요약 정보가 없어.'}</p>
+                <div className="assistant-tags">
+                  {(plan?.topPriorities ?? []).slice(0, 3).map((priority) => (
+                    <span key={priority} className="tag-chip">
+                      {priority}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         </article>
       </section>
 
@@ -218,6 +322,37 @@ export function AssistantPage() {
                       </li>
                     ))}
                   </ul>
+                  <button
+                    className="history-toggle-button"
+                    type="button"
+                    onClick={() => setExpandedHistoryId((current) => (current === history.id ? null : history.id))}
+                  >
+                    {expandedHistoryId === history.id ? '간단히 보기' : '상세 보기'}
+                  </button>
+                  {expandedHistoryId === history.id ? (
+                    <div className="history-detail-grid">
+                      <div>
+                        <span className="control-label">Calendar</span>
+                        <ul className="assistant-list compact-list">
+                          {history.calendar.map((item) => (
+                            <li key={`${history.id}-${item.time}-${item.title}`}>
+                              <strong>{item.time}</strong> {item.title}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <span className="control-label">Headlines</span>
+                        <ul className="assistant-list compact-list">
+                          {history.headlines.map((headline) => (
+                            <li key={`${history.id}-${headline.source}-${headline.title}`}>
+                              <strong>{headline.source}</strong> {headline.title}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ) : null}
                 </article>
               ))
             )}

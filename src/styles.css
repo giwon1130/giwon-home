@@ -111,6 +111,11 @@ a {
   background: #ffffff;
 }
 
+.action-button {
+  cursor: pointer;
+  font: inherit;
+}
+
 .hero-side-card,
 .about-card {
   padding: 24px;
@@ -344,6 +349,41 @@ a {
   line-height: 1.7;
 }
 
+.assistant-status-meta {
+  display: grid;
+  gap: 6px;
+  margin-top: 18px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.assistant-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.assistant-stat-card {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 22px;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+  padding: 20px;
+}
+
+.assistant-stat-card strong {
+  display: block;
+  font-size: 32px;
+  line-height: 1;
+}
+
+.assistant-stat-card p {
+  margin: 12px 0 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
 .assistant-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -384,6 +424,24 @@ a {
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 18px;
+}
+
+.assistant-secondary-section {
+  margin-top: 20px;
+}
+
+.assistant-insight-panel {
+  height: 100%;
+  padding: 16px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(14, 165, 233, 0.08));
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.assistant-insight-panel p {
+  margin: 0;
+  color: #334155;
+  line-height: 1.7;
 }
 
 .idea-form {
@@ -429,6 +487,24 @@ a {
   grid-column: 1 / -1;
 }
 
+.history-toggle-button {
+  margin-top: 14px;
+  border: 0;
+  background: transparent;
+  color: #0f766e;
+  font: inherit;
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+}
+
+.history-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
 .idea-card {
   padding: 18px;
   border-radius: 20px;
@@ -444,6 +520,7 @@ a {
 @media (max-width: 960px) {
   .hero-section,
   .assistant-hero,
+  .assistant-stats-grid,
   .stats-grid,
   .quick-link-grid,
   .project-grid,
