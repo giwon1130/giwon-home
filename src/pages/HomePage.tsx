@@ -5,6 +5,22 @@ import { getProjectsApi } from '../api/projectApi'
 import { ProjectGrid } from '../components/ProjectGrid'
 import type { Profile, Project } from '../types/api'
 
+function projectPriority(project: Project) {
+  if (project.status === 'LIVE') {
+    return 0
+  }
+
+  if (project.liveUrl) {
+    return 1
+  }
+
+  if (project.name === 'HomeHarmony' || project.name === 'TripMemo') {
+    return 2
+  }
+
+  return 3
+}
+
 export function HomePage() {
   const appName = import.meta.env.VITE_APP_NAME ?? 'home'
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -14,6 +30,16 @@ export function HomePage() {
   const liveCount = projects.filter((project) => project.status === 'LIVE').length
   const buildingCount = projects.filter((project) => project.status === 'BUILDING').length
   const planningCount = projects.filter((project) => project.status === 'PLANNING').length
+  const featuredProjects = [...projects]
+    .sort((left, right) => {
+      const priorityGap = projectPriority(left) - projectPriority(right)
+      if (priorityGap !== 0) {
+        return priorityGap
+      }
+
+      return right.tags.length - left.tags.length
+    })
+    .slice(0, 3)
 
   useEffect(() => {
     Promise.all([getProfileApi(), getProjectsApi()])
@@ -117,9 +143,56 @@ export function HomePage() {
       <section className="section-block">
         <div className="section-heading">
           <div>
+            <p className="eyebrow">Start Here</p>
+            <h2>지금 보기 좋은 프로젝트</h2>
+          </div>
+          <p className="section-note">최근 완성도가 높거나 바로 탐색하기 좋은 프로젝트를 먼저 보여준다.</p>
+        </div>
+        <div className="featured-project-grid">
+          {featuredProjects.map((project) => (
+            <article key={project.id} className="featured-project-card">
+              <div className="featured-project-header">
+                <span className={`project-status ${project.status.toLowerCase()}`}>{project.status}</span>
+                <span className="featured-project-category">{project.category}</span>
+              </div>
+              <h3>{project.name}</h3>
+              <p>{project.summary}</p>
+              <div className="featured-project-tags">
+                {project.tags.slice(0, 4).map((tag) => (
+                  <span key={tag} className="tag-chip">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <div className="featured-project-links">
+                {project.liveUrl ? (
+                  <a href={project.liveUrl} target="_blank" rel="noreferrer">
+                    Live
+                  </a>
+                ) : null}
+                {project.repositoryUrl ? (
+                  <a href={project.repositoryUrl} target="_blank" rel="noreferrer">
+                    Repository
+                  </a>
+                ) : null}
+                {project.docsUrl ? (
+                  <a href={project.docsUrl} target="_blank" rel="noreferrer">
+                    Docs
+                  </a>
+                ) : null}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section-block">
+        <div className="section-heading">
+          <div>
             <p className="eyebrow">Projects</p>
             <h2>대표 프로젝트</h2>
           </div>
+          <p className="section-note">공개 저장소와 연결 상태를 기준으로 전체 프로젝트를 정리했다.</p>
         </div>
         <ProjectGrid projects={projects} />
       </section>
