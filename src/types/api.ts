@@ -130,3 +130,12 @@ export type AssistantCopilot = {
     reason: string
   }>
 }
+
+export type AssistantCopilotAskResponse = {
+  question: string
+  answer: string
+  reasoning: string[]
+  suggestedActions: string[]
+  source: string
+  generatedAt: string
+}

@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { createIdeaApi, getBriefingHistoryApi, getIdeasApi, getTodayBriefingApi, getTodayCopilotApi, getTodayPlanApi, updateIdeaApi } from '../api/assistantApi'
-import type { AssistantBriefing, AssistantBriefingHistory, AssistantCopilot, AssistantIdea, AssistantPlan } from '../types/api'
+import { askCopilotApi, createIdeaApi, getBriefingHistoryApi, getIdeasApi, getTodayBriefingApi, getTodayCopilotApi, getTodayPlanApi, updateIdeaApi } from '../api/assistantApi'
+import type { AssistantBriefing, AssistantBriefingHistory, AssistantCopilot, AssistantCopilotAskResponse, AssistantIdea, AssistantPlan } from '../types/api'
 
 export function AssistantPage() {
+  const suggestedQuestions = [
+    '오늘 뭐부터 하면 좋을까?',
+    '지금 열어둔 아이디어 중 뭘 먼저 진행할까?',
+    '오늘 일정 기준으로 언제 집중 작업하는 게 좋을까?',
+  ] as const
+
   const [briefing, setBriefing] = useState<AssistantBriefing | null>(null)
   const [briefingHistory, setBriefingHistory] = useState<AssistantBriefingHistory[]>([])
   const [copilot, setCopilot] = useState<AssistantCopilot | null>(null)
@@ -12,8 +18,11 @@ export function AssistantPage() {
   const [title, setTitle] = useState('')
   const [rawText, setRawText] = useState('')
   const [tags, setTags] = useState('')
+  const [question, setQuestion] = useState('')
+  const [copilotAnswer, setCopilotAnswer] = useState<AssistantCopilotAskResponse | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAsking, setIsAsking] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null)
@@ -115,6 +124,33 @@ export function AssistantPage() {
       setErrorMessage('아이디어 저장에 실패했습니다.')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleAskCopilot = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (!question.trim()) {
+      setErrorMessage('질문을 입력해줘.')
+      return
+    }
+
+    setIsAsking(true)
+
+    try {
+      const response = await askCopilotApi(question.trim())
+
+      if (!response.success || !response.data) {
+        throw new Error('ask')
+      }
+
+      setCopilotAnswer(response.data)
+      setQuestion('')
+      setErrorMessage('')
+    } catch {
+      setErrorMessage('코파일럿 질문 처리에 실패했습니다.')
+    } finally {
+      setIsAsking(false)
     }
   }
 
@@ -408,6 +444,83 @@ export function AssistantPage() {
               )}
             </ul>
           </div>
+        </article>
+      </section>
+
+      <section className="assistant-grid">
+        <article className="assistant-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Ask Copilot</p>
+              <h2>질문하기</h2>
+            </div>
+          </div>
+          <div className="assistant-question-suggestions">
+            {suggestedQuestions.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className="filter-chip"
+                onClick={() => setQuestion(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+          <form className="idea-form" onSubmit={handleAskCopilot}>
+            <label>
+              질문
+              <textarea
+                rows={4}
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                placeholder="예: 오늘 뭐부터 하면 좋을까? 지금 열어둔 아이디어 중 뭘 먼저 진행할까?"
+              />
+            </label>
+            <button className="primary-button" type="submit" disabled={isAsking}>
+              {isAsking ? '답변 생성 중...' : '코파일럿에게 질문'}
+            </button>
+          </form>
+        </article>
+
+        <article className="assistant-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Copilot Answer</p>
+              <h2>답변</h2>
+            </div>
+            {copilotAnswer ? <span className="tag-chip">{copilotAnswer.source}</span> : null}
+          </div>
+          {copilotAnswer ? (
+            <div className="assistant-copilot-panel">
+              <div className="assistant-insight-panel">
+                <span className="control-label">Question</span>
+                <p className="assistant-detail-text">{copilotAnswer.question}</p>
+                <span className="control-label">Answer</span>
+                <p className="assistant-detail-text">{copilotAnswer.answer}</p>
+              </div>
+              <div className="assistant-subgrid assistant-copilot-subgrid">
+                <div>
+                  <span className="control-label">Reasoning</span>
+                  <ul className="assistant-list compact-list">
+                    {copilotAnswer.reasoning.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <span className="control-label">Suggested Actions</span>
+                  <ul className="assistant-list compact-list">
+                    {copilotAnswer.suggestedActions.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="assistant-summary">아직 질문하지 않았어. 코파일럿에게 지금 우선순위나 다음 액션을 물어보면 돼.</p>
+          )}
         </article>
       </section>
 
