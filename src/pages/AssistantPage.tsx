@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { askCopilotApi, createActionApi, createIdeaApi, getActionSummaryApi, getActionsApi, getBriefingHistoryApi, getCopilotHistoryApi, getDailyRoutineApi, getIdeasApi, getTodayBriefingApi, getTodayCopilotApi, getTodayPlanApi, getWeeklyReviewApi, getWeeklyReviewHistoryApi, updateActionApi, updateActionStatusApi, updateDailyRoutineApi, updateIdeaApi } from '../api/assistantApi'
-import type { AssistantAction, AssistantActionSummary, AssistantBriefing, AssistantBriefingHistory, AssistantCopilot, AssistantCopilotAskResponse, AssistantCopilotHistory, AssistantDailyRoutine, AssistantIdea, AssistantPlan, AssistantWeeklyReview, AssistantWeeklyReviewSnapshot } from '../types/api'
+import { askCopilotApi, createActionApi, createIdeaApi, getActionSummaryApi, getActionsApi, getBriefingHistoryApi, getCopilotHistoryApi, getDailyConditionApi, getDailyRoutineApi, getIdeasApi, getTodayBriefingApi, getTodayCopilotApi, getTodayPlanApi, getWeeklyReviewApi, getWeeklyReviewHistoryApi, updateActionApi, updateActionStatusApi, updateDailyConditionApi, updateDailyRoutineApi, updateIdeaApi } from '../api/assistantApi'
+import type { AssistantAction, AssistantActionSummary, AssistantBriefing, AssistantBriefingHistory, AssistantCopilot, AssistantCopilotAskResponse, AssistantCopilotHistory, AssistantDailyCondition, AssistantDailyRoutine, AssistantIdea, AssistantPlan, AssistantWeeklyReview, AssistantWeeklyReviewSnapshot } from '../types/api'
 
 export function AssistantPage() {
   const suggestedQuestions = [
@@ -18,6 +18,7 @@ export function AssistantPage() {
   const [ideas, setIdeas] = useState<AssistantIdea[]>([])
   const [actions, setActions] = useState<AssistantAction[]>([])
   const [actionSummary, setActionSummary] = useState<AssistantActionSummary | null>(null)
+  const [dailyCondition, setDailyCondition] = useState<AssistantDailyCondition | null>(null)
   const [dailyRoutine, setDailyRoutine] = useState<AssistantDailyRoutine | null>(null)
   const [weeklyReview, setWeeklyReview] = useState<AssistantWeeklyReview | null>(null)
   const [weeklyReviewHistory, setWeeklyReviewHistory] = useState<AssistantWeeklyReviewSnapshot[]>([])
@@ -51,6 +52,7 @@ export function AssistantPage() {
   const [editingActionPriority, setEditingActionPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM')
   const [editingActionDueDate, setEditingActionDueDate] = useState('')
   const [updatingRoutineKey, setUpdatingRoutineKey] = useState<string | null>(null)
+  const [isUpdatingCondition, setIsUpdatingCondition] = useState(false)
 
   const intentLabels: Record<AssistantCopilotAskResponse['intent'], string> = {
     PRIORITY: '우선순위',
@@ -138,6 +140,17 @@ export function AssistantPage() {
     }
   }
 
+  const getConditionTrendLabel = (trend: AssistantDailyCondition['trend']) => {
+    switch (trend) {
+      case 'UP':
+        return '상승'
+      case 'DOWN':
+        return '하락'
+      default:
+        return '유지'
+    }
+  }
+
   const getActionSortWeight = (action: AssistantAction) => {
     const dueState = getDueState(action)
     const statusWeight = action.status === 'OPEN' ? 10_000_000_000 : 0
@@ -211,8 +224,8 @@ export function AssistantPage() {
       setIsLoading(true)
     }
 
-    Promise.all([getTodayBriefingApi(), getBriefingHistoryApi(), getTodayCopilotApi(), getCopilotHistoryApi(), getTodayPlanApi(), getIdeasApi(), getActionsApi(), getActionSummaryApi(), getDailyRoutineApi(), getWeeklyReviewApi(), getWeeklyReviewHistoryApi()])
-      .then(([briefingResponse, historyResponse, copilotResponse, copilotHistoryResponse, planResponse, ideasResponse, actionsResponse, actionSummaryResponse, dailyRoutineResponse, weeklyReviewResponse, weeklyReviewHistoryResponse]) => {
+    Promise.all([getTodayBriefingApi(), getBriefingHistoryApi(), getTodayCopilotApi(), getCopilotHistoryApi(), getTodayPlanApi(), getIdeasApi(), getActionsApi(), getActionSummaryApi(), getDailyConditionApi(), getDailyRoutineApi(), getWeeklyReviewApi(), getWeeklyReviewHistoryApi()])
+      .then(([briefingResponse, historyResponse, copilotResponse, copilotHistoryResponse, planResponse, ideasResponse, actionsResponse, actionSummaryResponse, dailyConditionResponse, dailyRoutineResponse, weeklyReviewResponse, weeklyReviewHistoryResponse]) => {
         if (!briefingResponse.success || !briefingResponse.data) {
           throw new Error('briefing')
         }
@@ -245,6 +258,10 @@ export function AssistantPage() {
           throw new Error('action-summary')
         }
 
+        if (!dailyConditionResponse.success || !dailyConditionResponse.data) {
+          throw new Error('daily-condition')
+        }
+
         if (!dailyRoutineResponse.success || !dailyRoutineResponse.data) {
           throw new Error('daily-routine')
         }
@@ -265,6 +282,7 @@ export function AssistantPage() {
         setIdeas(ideasResponse.data)
         setActions(actionsResponse.data)
         setActionSummary(actionSummaryResponse.data)
+        setDailyCondition(dailyConditionResponse.data)
         setDailyRoutine(dailyRoutineResponse.data)
         setWeeklyReview(weeklyReviewResponse.data)
         setWeeklyReviewHistory(weeklyReviewHistoryResponse.data)
@@ -793,6 +811,38 @@ export function AssistantPage() {
     }
   }
 
+  const handleConditionQuickUpdate = async (
+    key: 'energy' | 'focus' | 'mood' | 'stress' | 'sleepQuality',
+    value: number,
+    note?: string,
+  ) => {
+    if (!dailyCondition) {
+      return
+    }
+
+    setIsUpdatingCondition(true)
+    try {
+      const response = await updateDailyConditionApi({
+        energy: key === 'energy' ? value : dailyCondition.energy,
+        focus: key === 'focus' ? value : dailyCondition.focus,
+        mood: key === 'mood' ? value : dailyCondition.mood,
+        stress: key === 'stress' ? value : dailyCondition.stress,
+        sleepQuality: key === 'sleepQuality' ? value : dailyCondition.sleepQuality,
+        note: note ?? dailyCondition.note,
+      })
+      if (!response.success || !response.data) {
+        throw new Error('condition')
+      }
+      setDailyCondition(response.data)
+      await loadAssistantData({ silent: true })
+      setErrorMessage('')
+    } catch {
+      setErrorMessage('Condition Check-in 업데이트에 실패했습니다.')
+    } finally {
+      setIsUpdatingCondition(false)
+    }
+  }
+
   const handleRoutineNotePreset = async (itemKey: string, note: string, completed = false) => {
     setUpdatingRoutineKey(itemKey)
 
@@ -949,6 +999,98 @@ export function AssistantPage() {
       </section>
 
       <section className="assistant-grid">
+        <article className="assistant-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Condition Check-in</p>
+              <h2>오늘 컨디션 신호</h2>
+            </div>
+            <div className="assistant-tags">
+              <span className="tag-chip">{dailyCondition ? `준비도 ${dailyCondition.readinessScore}` : '대기 중'}</span>
+              <span className="tag-chip">{dailyCondition ? `추세 ${getConditionTrendLabel(dailyCondition.trend)}` : '추세 대기'}</span>
+            </div>
+          </div>
+          <p className="assistant-summary">
+            {dailyCondition
+              ? '에너지, 집중, 기분, 스트레스, 수면 상태를 5점 기준으로 빠르게 남겨서 오늘 작업 강도를 조절하는 영역이야.'
+              : 'Condition Check-in 데이터를 불러오는 중이야.'}
+          </p>
+          {dailyCondition ? (
+            <>
+              <div className="assistant-insight-panel routine-insight-panel">
+                <span className="control-label">Condition Summary</span>
+                <p className="assistant-detail-text">{dailyCondition.summary}</p>
+                <div className="assistant-tags">
+                  {dailyCondition.suggestions.map((item) => (
+                    <button
+                      key={item}
+                      type="button"
+                      className="filter-chip"
+                      onClick={() => setQuestion(`${item}를 기준으로 오늘 일을 어떻게 조절하면 좋을까?`)}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="condition-grid">
+                {[
+                  ['energy', '에너지', dailyCondition.energy],
+                  ['focus', '집중', dailyCondition.focus],
+                  ['mood', '기분', dailyCondition.mood],
+                  ['stress', '스트레스', dailyCondition.stress],
+                  ['sleepQuality', '수면', dailyCondition.sleepQuality],
+                ].map(([key, label, score]) => (
+                  <article key={key} className="condition-card">
+                    <span className="control-label">{label}</span>
+                    <strong>{score}/5</strong>
+                    <div className="condition-score-buttons">
+                      {[1, 2, 3, 4, 5].map((value) => (
+                        <button
+                          key={`${key}-${value}`}
+                          type="button"
+                          className={`filter-chip ${Number(score) === value ? 'active' : ''}`}
+                          disabled={isUpdatingCondition}
+                          onClick={() => handleConditionQuickUpdate(key as 'energy' | 'focus' | 'mood' | 'stress' | 'sleepQuality', value)}
+                        >
+                          {value}
+                        </button>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div className="assistant-secondary-section">
+                <span className="control-label">Quick Notes</span>
+                <div className="assistant-tags">
+                  {['오전 컨디션 좋음', '잠이 부족함', '스트레스 높음', '산책 후 나아짐'].map((note) => (
+                    <button
+                      key={note}
+                      type="button"
+                      className="filter-chip"
+                      disabled={isUpdatingCondition}
+                      onClick={() => handleConditionQuickUpdate('energy', dailyCondition.energy, note)}
+                    >
+                      {note}
+                    </button>
+                  ))}
+                  {dailyCondition.note ? <span className="tag-chip">{dailyCondition.note}</span> : null}
+                </div>
+              </div>
+              <div className="assistant-secondary-section">
+                <span className="control-label">Recent Readiness</span>
+                <div className="assistant-tags">
+                  {dailyCondition.recentReadiness.map((item) => (
+                    <span key={item.date} className="tag-chip">
+                      {item.date.slice(5)} · {item.readinessScore}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </>
+          ) : null}
+        </article>
+
         <article className="assistant-card">
           <div className="section-heading">
             <div>

@@ -8,6 +8,7 @@ import type {
   AssistantCopilotHistory,
   AssistantAction,
   AssistantActionSummary,
+  AssistantDailyCondition,
   AssistantDailyRoutine,
   AssistantIdea,
   AssistantPlan,
@@ -54,6 +55,22 @@ export function getActionSummaryApi() {
 export function getDailyRoutineApi(date?: string) {
   const query = date ? `?date=${date}` : ''
   return assistantApiFetch<ApiResponse<AssistantDailyRoutine>>(`/api/v1/routines/daily${query}`)
+}
+
+export function getDailyConditionApi(date?: string) {
+  const query = date ? `?date=${date}` : ''
+  return assistantApiFetch<ApiResponse<AssistantDailyCondition>>(`/api/v1/checkins/condition${query}`)
+}
+
+export function updateDailyConditionApi(
+  payload: { energy: number; focus: number; mood: number; stress: number; sleepQuality: number; note?: string | null },
+  date?: string,
+) {
+  const query = date ? `?date=${date}` : ''
+  return assistantApiFetch<ApiResponse<AssistantDailyCondition>>(`/api/v1/checkins/condition${query}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
 }
 
 export function updateDailyRoutineApi(

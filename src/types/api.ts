@@ -239,6 +239,24 @@ export type AssistantDailyRoutineItem = {
   note: string | null
 }
 
+export type AssistantDailyCondition = {
+  date: string
+  energy: number
+  focus: number
+  mood: number
+  stress: number
+  sleepQuality: number
+  note: string | null
+  readinessScore: number
+  trend: 'UP' | 'STABLE' | 'DOWN'
+  summary: string
+  suggestions: string[]
+  recentReadiness: Array<{
+    date: string
+    readinessScore: number
+  }>
+}
+
 export type AssistantWeeklyReview = {
   periodStart: string
   periodEnd: string
