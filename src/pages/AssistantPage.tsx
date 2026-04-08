@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { askCopilotApi, createActionApi, createIdeaApi, getActionSummaryApi, getActionsApi, getBriefingHistoryApi, getCopilotHistoryApi, getIdeasApi, getTodayBriefingApi, getTodayCopilotApi, getTodayPlanApi, getWeeklyReviewApi, getWeeklyReviewHistoryApi, updateActionApi, updateActionStatusApi, updateIdeaApi } from '../api/assistantApi'
-import type { AssistantAction, AssistantActionSummary, AssistantBriefing, AssistantBriefingHistory, AssistantCopilot, AssistantCopilotAskResponse, AssistantCopilotHistory, AssistantIdea, AssistantPlan, AssistantWeeklyReview, AssistantWeeklyReviewSnapshot } from '../types/api'
+import { askCopilotApi, createActionApi, createIdeaApi, getActionSummaryApi, getActionsApi, getBriefingHistoryApi, getCopilotHistoryApi, getDailyRoutineApi, getIdeasApi, getTodayBriefingApi, getTodayCopilotApi, getTodayPlanApi, getWeeklyReviewApi, getWeeklyReviewHistoryApi, updateActionApi, updateActionStatusApi, updateDailyRoutineApi, updateIdeaApi } from '../api/assistantApi'
+import type { AssistantAction, AssistantActionSummary, AssistantBriefing, AssistantBriefingHistory, AssistantCopilot, AssistantCopilotAskResponse, AssistantCopilotHistory, AssistantDailyRoutine, AssistantIdea, AssistantPlan, AssistantWeeklyReview, AssistantWeeklyReviewSnapshot } from '../types/api'
 
 export function AssistantPage() {
   const suggestedQuestions = [
@@ -18,6 +18,7 @@ export function AssistantPage() {
   const [ideas, setIdeas] = useState<AssistantIdea[]>([])
   const [actions, setActions] = useState<AssistantAction[]>([])
   const [actionSummary, setActionSummary] = useState<AssistantActionSummary | null>(null)
+  const [dailyRoutine, setDailyRoutine] = useState<AssistantDailyRoutine | null>(null)
   const [weeklyReview, setWeeklyReview] = useState<AssistantWeeklyReview | null>(null)
   const [weeklyReviewHistory, setWeeklyReviewHistory] = useState<AssistantWeeklyReviewSnapshot[]>([])
   const [title, setTitle] = useState('')
@@ -49,6 +50,7 @@ export function AssistantPage() {
   const [editingActionId, setEditingActionId] = useState<string | null>(null)
   const [editingActionPriority, setEditingActionPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM')
   const [editingActionDueDate, setEditingActionDueDate] = useState('')
+  const [updatingRoutineKey, setUpdatingRoutineKey] = useState<string | null>(null)
 
   const intentLabels: Record<AssistantCopilotAskResponse['intent'], string> = {
     PRIORITY: '우선순위',
@@ -185,8 +187,8 @@ export function AssistantPage() {
       setIsLoading(true)
     }
 
-    Promise.all([getTodayBriefingApi(), getBriefingHistoryApi(), getTodayCopilotApi(), getCopilotHistoryApi(), getTodayPlanApi(), getIdeasApi(), getActionsApi(), getActionSummaryApi(), getWeeklyReviewApi(), getWeeklyReviewHistoryApi()])
-      .then(([briefingResponse, historyResponse, copilotResponse, copilotHistoryResponse, planResponse, ideasResponse, actionsResponse, actionSummaryResponse, weeklyReviewResponse, weeklyReviewHistoryResponse]) => {
+    Promise.all([getTodayBriefingApi(), getBriefingHistoryApi(), getTodayCopilotApi(), getCopilotHistoryApi(), getTodayPlanApi(), getIdeasApi(), getActionsApi(), getActionSummaryApi(), getDailyRoutineApi(), getWeeklyReviewApi(), getWeeklyReviewHistoryApi()])
+      .then(([briefingResponse, historyResponse, copilotResponse, copilotHistoryResponse, planResponse, ideasResponse, actionsResponse, actionSummaryResponse, dailyRoutineResponse, weeklyReviewResponse, weeklyReviewHistoryResponse]) => {
         if (!briefingResponse.success || !briefingResponse.data) {
           throw new Error('briefing')
         }
@@ -219,6 +221,10 @@ export function AssistantPage() {
           throw new Error('action-summary')
         }
 
+        if (!dailyRoutineResponse.success || !dailyRoutineResponse.data) {
+          throw new Error('daily-routine')
+        }
+
         if (!weeklyReviewResponse.success || !weeklyReviewResponse.data) {
           throw new Error('weekly-review')
         }
@@ -235,6 +241,7 @@ export function AssistantPage() {
         setIdeas(ideasResponse.data)
         setActions(actionsResponse.data)
         setActionSummary(actionSummaryResponse.data)
+        setDailyRoutine(dailyRoutineResponse.data)
         setWeeklyReview(weeklyReviewResponse.data)
         setWeeklyReviewHistory(weeklyReviewHistoryResponse.data)
         setErrorMessage('')
@@ -332,6 +339,7 @@ export function AssistantPage() {
   const latestHistory = briefingHistory[0]
   const recentIdeasCount = ideas.filter((idea) => idea.status === 'OPEN' || idea.status === 'IN_PROGRESS').length
   const openActionsCount = actions.filter((action) => action.status === 'OPEN').length
+  const incompleteRoutineItems = dailyRoutine?.items.filter((item) => !item.completed) ?? []
   const filteredIdeas =
     ideaFilter === 'ALL' ? ideas : ideas.filter((idea) => idea.status === ideaFilter)
   const searchedIdeas = filteredIdeas.filter((idea) => {
@@ -384,6 +392,7 @@ export function AssistantPage() {
   })
   const topSignalIdea = sortedIdeas[0] ?? null
   const topOpenAction = sortedActions.find((action) => action.status === 'OPEN') ?? null
+  const topIncompleteRoutine = incompleteRoutineItems[0] ?? null
   const executionCandidates = [
     copilot?.topPriority
       ? {
@@ -731,6 +740,24 @@ export function AssistantPage() {
     }
   }
 
+  const handleRoutineToggle = async (itemKey: string, completed: boolean) => {
+    setUpdatingRoutineKey(itemKey)
+
+    try {
+      const response = await updateDailyRoutineApi(itemKey, { completed })
+      if (!response.success || !response.data) {
+        throw new Error('routine')
+      }
+      setDailyRoutine(response.data)
+      await loadAssistantData({ silent: true })
+      setErrorMessage('')
+    } catch {
+      setErrorMessage('Daily Check 업데이트에 실패했습니다.')
+    } finally {
+      setUpdatingRoutineKey(null)
+    }
+  }
+
   const applyActionDuePreset = (preset: 'TODAY' | 'TOMORROW_MORNING' | 'THIS_FRIDAY') => {
     const now = new Date()
 
@@ -819,6 +846,73 @@ export function AssistantPage() {
           <span className="control-label">Action Tracker</span>
           <strong>{openActionsCount}</strong>
           <p>아직 완료하지 않은 실행 액션 수</p>
+        </article>
+        <article className="assistant-stat-card">
+          <span className="control-label">Daily Check</span>
+          <strong>{dailyRoutine ? `${dailyRoutine.completedCount}/${dailyRoutine.totalCount}` : '-'}</strong>
+          <p>{dailyRoutine ? `오늘 완료율 ${dailyRoutine.completionRate}%` : '루틴 체크를 불러오는 중'}</p>
+        </article>
+      </section>
+
+      <section className="assistant-grid">
+        <article className="assistant-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Daily Check</p>
+              <h2>오늘 루틴 체크</h2>
+            </div>
+            <div className="assistant-tags">
+              <span className="tag-chip">{dailyRoutine ? `${dailyRoutine.completionRate}% 완료` : '대기 중'}</span>
+              <span className="tag-chip">{dailyRoutine ? `${dailyRoutine.streakDays}일 연속` : '0일 연속'}</span>
+            </div>
+          </div>
+          <p className="assistant-summary">
+            {dailyRoutine
+              ? `비타민, 물, 운동, 산책, 약 복용, 수면 준비 같은 생활 루틴을 오늘 기준으로 빠르게 체크하는 영역이야.`
+              : 'Daily Check 데이터를 불러오는 중이야.'}
+          </p>
+          {dailyRoutine ? (
+            <div className="routine-list">
+              {dailyRoutine.items.map((item) => (
+                <article
+                  key={item.key}
+                  className={`routine-item ${item.completed ? 'routine-item-completed' : ''}`}
+                >
+                  <div>
+                    <div className="routine-item-header">
+                      <strong>{item.label}</strong>
+                      <span className="tag-chip">{item.targetTime}</span>
+                    </div>
+                    <p>{item.description}</p>
+                    <div className="assistant-tags history-card-tags">
+                      <span className="tag-chip">{item.category}</span>
+                      {item.completedAt ? <span className="tag-chip">{formatDateTime(item.completedAt)}</span> : null}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    className={`filter-chip ${item.completed ? 'active' : ''}`}
+                    onClick={() => handleRoutineToggle(item.key, !item.completed)}
+                    disabled={updatingRoutineKey === item.key}
+                  >
+                    {updatingRoutineKey === item.key ? '저장 중...' : item.completed ? '완료됨' : '체크하기'}
+                  </button>
+                </article>
+              ))}
+            </div>
+          ) : null}
+          <div className="assistant-subgrid action-summary-grid">
+            <div className="action-summary-card">
+              <span className="control-label">남은 체크</span>
+              <strong>{incompleteRoutineItems.length}</strong>
+              <p>오늘 아직 남아 있는 루틴 항목</p>
+            </div>
+            <div className="action-summary-card">
+              <span className="control-label">가장 먼저 볼 항목</span>
+              <strong>{topIncompleteRoutine?.label ?? '완료'}</strong>
+              <p>{topIncompleteRoutine?.description ?? '오늘 루틴을 모두 체크했어.'}</p>
+            </div>
+          </div>
         </article>
       </section>
 
@@ -933,6 +1027,8 @@ export function AssistantPage() {
                     <li>액션 완료 {weeklyReview.metrics.actionsCompleted}건</li>
                     <li>열린 액션 {weeklyReview.metrics.openActions}건</li>
                     <li>아이디어 {weeklyReview.metrics.ideasCaptured}건</li>
+                    <li>루틴 체크 {weeklyReview.metrics.routineChecksCompleted}건</li>
+                    <li>루틴 완료일 {weeklyReview.metrics.routineCompletionDays}일</li>
                   </ul>
                 </div>
                 <div>

@@ -182,6 +182,26 @@ export type AssistantActionSummary = {
   completionRate: number
 }
 
+export type AssistantDailyRoutine = {
+  date: string
+  completionRate: number
+  completedCount: number
+  totalCount: number
+  streakDays: number
+  items: AssistantDailyRoutineItem[]
+}
+
+export type AssistantDailyRoutineItem = {
+  key: string
+  label: string
+  description: string
+  category: string
+  targetTime: string
+  completed: boolean
+  completedAt: string | null
+  note: string | null
+}
+
 export type AssistantWeeklyReview = {
   periodStart: string
   periodEnd: string
@@ -192,6 +212,8 @@ export type AssistantWeeklyReview = {
     actionsCompleted: number
     openActions: number
     ideasCaptured: number
+    routineChecksCompleted: number
+    routineCompletionDays: number
   }
   wins: string[]
   risks: string[]

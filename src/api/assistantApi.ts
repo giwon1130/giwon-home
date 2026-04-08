@@ -8,6 +8,7 @@ import type {
   AssistantCopilotHistory,
   AssistantAction,
   AssistantActionSummary,
+  AssistantDailyRoutine,
   AssistantIdea,
   AssistantPlan,
   AssistantWeeklyReview,
@@ -48,6 +49,23 @@ export function getActionsApi(status?: 'OPEN' | 'DONE') {
 
 export function getActionSummaryApi() {
   return assistantApiFetch<ApiResponse<AssistantActionSummary>>('/api/v1/actions/summary')
+}
+
+export function getDailyRoutineApi(date?: string) {
+  const query = date ? `?date=${date}` : ''
+  return assistantApiFetch<ApiResponse<AssistantDailyRoutine>>(`/api/v1/routines/daily${query}`)
+}
+
+export function updateDailyRoutineApi(
+  itemKey: string,
+  payload: { completed: boolean; note?: string | null },
+  date?: string,
+) {
+  const query = date ? `?date=${date}` : ''
+  return assistantApiFetch<ApiResponse<AssistantDailyRoutine>>(`/api/v1/routines/daily/${itemKey}${query}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  })
 }
 
 export function getWeeklyReviewApi() {
