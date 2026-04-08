@@ -441,6 +441,14 @@ export function AssistantPage() {
       .map((action) => action.title.trim().toLowerCase()),
   )
   const executionCandidates = [
+    dailyCondition?.suggestions[0]
+      ? {
+        title: dailyCondition.suggestions[0],
+        source: `Condition Check-in · 준비도 ${dailyCondition.readinessScore}`,
+        priority: dailyCondition.readinessScore < 45 ? 'HIGH' as const : 'MEDIUM' as const,
+        dueDate: buildCandidateDueDate(dailyCondition.readinessScore < 45 ? 'TODAY' : 'MORNING'),
+      }
+      : null,
     copilot?.topPriority
       ? {
         title: copilot.topPriority,
@@ -1495,6 +1503,24 @@ export function AssistantPage() {
                   </button>
                 </div>
               ) : null}
+            </div>
+            <div className="assistant-insight-panel routine-insight-panel">
+              <span className="control-label">Condition Signal</span>
+              <p className="assistant-detail-text">
+                {copilot?.conditionSummary ?? '컨디션 요약 정보 없음'}
+              </p>
+              <div className="assistant-tags">
+                {copilot ? <span className="tag-chip">준비도 {copilot.conditionReadinessScore}</span> : null}
+                {copilot?.conditionSuggestedAction ? (
+                  <button
+                    type="button"
+                    className="filter-chip"
+                    onClick={() => setQuestion(`${copilot.conditionSuggestedAction}를 기준으로 오늘 작업 강도를 어떻게 조절하면 좋을까?`)}
+                  >
+                    {copilot.conditionSuggestedAction}
+                  </button>
+                ) : null}
+              </div>
             </div>
             <div className="assistant-subgrid assistant-copilot-subgrid">
               <div>
