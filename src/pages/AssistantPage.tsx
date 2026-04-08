@@ -360,6 +360,7 @@ export function AssistantPage() {
   const uniqueHeadlineSources = new Set((briefing?.headlines ?? []).map((headline) => headline.source)).size
   const leadHeadline = briefing?.headlines[0] ?? latestHistory?.headlines[0] ?? null
   const overdueActionsCount = actions.filter((action) => getDueState(action) === 'OVERDUE').length
+  const topRisk = copilot?.risks[0] ?? weeklyReview?.risks[0] ?? null
   const filteredCopilotHistory = copilotHistory.filter((item) => {
     const intentMatched = historyIntentFilter === 'ALL' || item.intent === historyIntentFilter
     const searchMatched =
@@ -381,6 +382,8 @@ export function AssistantPage() {
     }
     return new Date(right.updatedAt).getTime() - new Date(left.updatedAt).getTime()
   })
+  const topSignalIdea = sortedIdeas[0] ?? null
+  const topOpenAction = sortedActions.find((action) => action.status === 'OPEN') ?? null
   const executionCandidates = [
     copilot?.topPriority
       ? {
@@ -505,6 +508,22 @@ export function AssistantPage() {
   const handleReuseQuestion = (value: string) => {
     setQuestion(value)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleFocusIdea = (ideaId: string) => {
+    setIdeaFilter('ALL')
+    setExpandedIdeaId(ideaId)
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+  }
+
+  const handleFocusAction = (actionId: string) => {
+    const target = actions.find((action) => action.id === actionId)
+    setActionFilter('OPEN')
+    setActionFocusFilter('ALL')
+    if (target) {
+      startActionEdit(target)
+    }
+    window.scrollTo({ top: document.body.scrollHeight * 0.45, behavior: 'smooth' })
   }
 
   const handleCreateActionFromSuggestion = async (actionTitle: string) => {
@@ -800,6 +819,93 @@ export function AssistantPage() {
           <span className="control-label">Action Tracker</span>
           <strong>{openActionsCount}</strong>
           <p>아직 완료하지 않은 실행 액션 수</p>
+        </article>
+      </section>
+
+      <section className="assistant-grid">
+        <article className="assistant-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Decision Radar</p>
+              <h2>지금 봐야 할 신호</h2>
+            </div>
+            <span className="tag-chip">실행 우선</span>
+          </div>
+          <div className="assistant-subgrid">
+            <article className="assistant-radar-card">
+              <span className="control-label">External Signal</span>
+              <strong>{leadHeadline?.title ?? '브리핑 신호 없음'}</strong>
+              <p>{leadHeadline?.source ?? '브리핑이 쌓이면 대표 헤드라인이 보여.'}</p>
+              {leadHeadline ? (
+                <div className="assistant-tags">
+                  <button
+                    type="button"
+                    className="filter-chip"
+                    onClick={() => handleCaptureHeadlineAsIdea(leadHeadline)}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? '저장 중...' : '아이디어로 저장'}
+                  </button>
+                </div>
+              ) : null}
+            </article>
+            <article className="assistant-radar-card">
+              <span className="control-label">Top Risk</span>
+              <strong>{topRisk ?? '리스크 없음'}</strong>
+              <p>오늘 대응이 필요한 리스크를 바로 질문으로 넘길 수 있어.</p>
+              {topRisk ? (
+                <div className="assistant-tags">
+                  <button
+                    type="button"
+                    className="filter-chip"
+                    onClick={() => handleReuseQuestion(`${topRisk} 이 리스크를 오늘 어떻게 대응하면 좋을까?`)}
+                  >
+                    대응 질문 만들기
+                  </button>
+                </div>
+              ) : null}
+            </article>
+            <article className="assistant-radar-card">
+              <span className="control-label">Idea Hotspot</span>
+              <strong>{topSignalIdea?.title ?? '아이디어 없음'}</strong>
+              <p>
+                {topSignalIdea
+                  ? `${getIdeaSignalLabel(topSignalIdea)} 신호 · 액션 후보 ${topSignalIdea.suggestedActions.length}개`
+                  : '아이디어가 쌓이면 지금 검토할 아이디어를 자동으로 올려줘.'}
+              </p>
+              {topSignalIdea ? (
+                <div className="assistant-tags">
+                  <button
+                    type="button"
+                    className="filter-chip"
+                    onClick={() => handleFocusIdea(topSignalIdea.id)}
+                  >
+                    아이디어 보기
+                  </button>
+                </div>
+              ) : null}
+            </article>
+            <article className="assistant-radar-card">
+              <span className="control-label">Execution Pressure</span>
+              <strong>{topOpenAction?.title ?? '열린 액션 없음'}</strong>
+              <p>
+                {topOpenAction
+                  ? `${getDueStateLabel(getDueState(topOpenAction))} · ${topOpenAction.priority} 우선순위`
+                  : '액션이 생기면 가장 압박이 큰 실행 항목을 여기서 바로 보여줘.'}
+              </p>
+              {topOpenAction ? (
+                <div className="assistant-tags">
+                  <button
+                    type="button"
+                    className="filter-chip"
+                    onClick={() => handleFocusAction(topOpenAction.id)}
+                  >
+                    액션 보기
+                  </button>
+                </div>
+              ) : null}
+            </article>
+          </div>
         </article>
       </section>
 
