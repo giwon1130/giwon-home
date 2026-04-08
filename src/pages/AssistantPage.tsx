@@ -535,6 +535,64 @@ export function AssistantPage() {
     }
   }
 
+  const handleCreateAllExecutionCandidates = async () => {
+    const pendingCandidates = executionCandidates.filter((candidate) => !actionTitles.has(candidate.title.trim().toLowerCase()))
+
+    if (pendingCandidates.length === 0) {
+      setErrorMessage('이미 저장 가능한 실행 후보가 없어.')
+      return
+    }
+
+    setIsSavingAction('candidate-bulk')
+
+    try {
+      for (const candidate of pendingCandidates) {
+        const response = await createActionApi({
+          title: candidate.title,
+          sourceQuestion: candidate.source,
+          priority: candidate.priority,
+          dueDate: candidate.dueDate,
+        })
+
+        if (!response.success || !response.data) {
+          throw new Error('bulk-candidate-action')
+        }
+      }
+
+      await loadAssistantData({ silent: true })
+      setErrorMessage('')
+    } catch {
+      setErrorMessage('실행 후보 일괄 저장에 실패했습니다.')
+    } finally {
+      setIsSavingAction(null)
+    }
+  }
+
+  const handleCreateActionFromIdea = async (idea: AssistantIdea, actionTitle: string) => {
+    const key = `idea-${idea.id}-${actionTitle}`
+    setIsSavingAction(key)
+
+    try {
+      const response = await createActionApi({
+        title: actionTitle,
+        sourceQuestion: `Idea · ${idea.title}`,
+        priority: idea.status === 'IN_PROGRESS' ? 'HIGH' : 'MEDIUM',
+        dueDate: buildCandidateDueDate(idea.status === 'IN_PROGRESS' ? 'TODAY' : 'MORNING'),
+      })
+
+      if (!response.success || !response.data) {
+        throw new Error('idea-action')
+      }
+
+      await loadAssistantData({ silent: true })
+      setErrorMessage('')
+    } catch {
+      setErrorMessage('아이디어 추천 액션 저장에 실패했습니다.')
+    } finally {
+      setIsSavingAction(null)
+    }
+  }
+
   const handleActionStatusChange = async (actionId: string, status: 'OPEN' | 'DONE') => {
     setUpdatingActionId(actionId)
     try {
@@ -898,6 +956,17 @@ export function AssistantPage() {
             <div>
               <p className="eyebrow">Execution Queue</p>
               <h2>오늘 실행 후보</h2>
+            </div>
+            <div className="assistant-tags">
+              <span className="tag-chip">후보 {executionCandidates.length}</span>
+              <button
+                type="button"
+                className="filter-chip"
+                onClick={handleCreateAllExecutionCandidates}
+                disabled={isSavingAction === 'candidate-bulk' || executionCandidates.every((candidate) => actionTitles.has(candidate.title.trim().toLowerCase()))}
+              >
+                {isSavingAction === 'candidate-bulk' ? '일괄 저장 중...' : '후보 전체 저장'}
+              </button>
             </div>
           </div>
           {executionCandidates.length === 0 ? (
@@ -1581,9 +1650,27 @@ export function AssistantPage() {
                       <div>
                         <span className="control-label">Suggested Actions</span>
                         <ul className="assistant-list compact-list">
-                          {idea.suggestedActions.map((action) => (
-                            <li key={`${idea.id}-${action}`}>{action}</li>
-                          ))}
+                          {idea.suggestedActions.map((action) => {
+                            const exists = actionTitles.has(action.trim().toLowerCase())
+
+                            return (
+                            <li key={`${idea.id}-${action}`}>
+                              <div className="suggested-action-block">
+                                <span>{action}</span>
+                                <p className="assistant-detail-text suggested-action-reason">
+                                  {idea.status === 'IN_PROGRESS' ? '진행 중 아이디어라 오늘 바로 액션으로 전환하는 게 좋다.' : '아이디어를 실제 작업으로 바꾸는 첫 단계로 쓰기 좋다.'}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                className="filter-chip action-save-button"
+                                onClick={() => handleCreateActionFromIdea(idea, action)}
+                                disabled={exists || isSavingAction === `idea-${idea.id}-${action}`}
+                              >
+                                {exists ? '이미 액션 있음' : isSavingAction === `idea-${idea.id}-${action}` ? '저장 중...' : '액션으로 저장'}
+                              </button>
+                            </li>
+                          )})}
                         </ul>
                       </div>
                     </div>
