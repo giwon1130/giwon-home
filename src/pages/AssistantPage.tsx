@@ -787,6 +787,24 @@ export function AssistantPage() {
     }
   }
 
+  const getRoutineNotePresets = (item: AssistantDailyRoutine['items'][number]) => {
+    if (item.category === 'NUTRITION') {
+      return [
+        { label: '간단히 먹음', note: '간단히 먹음', completed: true },
+        { label: '밖에서 먹음', note: '밖에서 먹음', completed: true },
+        { label: '거름', note: '거름', completed: false },
+        { label: '늦게 먹을 예정', note: '늦게 먹을 예정', completed: false },
+      ] as const
+    }
+
+    return [
+      { label: '까먹음', note: '까먹음', completed: false },
+      { label: '외출 중', note: '외출 중', completed: false },
+      { label: '저녁에 할 예정', note: '저녁에 할 예정', completed: false },
+      { label: '이미 했음', note: '완료했는데 기록 안함', completed: true },
+    ] as const
+  }
+
   const handleCreateActionFromRoutine = async (itemKey: string, label: string, targetTime: string, category: string) => {
     const key = `routine-${itemKey}`
     setIsSavingAction(key)
@@ -961,38 +979,17 @@ export function AssistantPage() {
                     </div>
                     {!item.completed ? (
                       <div className="assistant-tags routine-note-presets">
-                        <button
-                          type="button"
-                          className="filter-chip"
-                          onClick={() => handleRoutineNotePreset(item.key, '까먹음')}
-                          disabled={updatingRoutineKey === item.key}
-                        >
-                          까먹음
-                        </button>
-                        <button
-                          type="button"
-                          className="filter-chip"
-                          onClick={() => handleRoutineNotePreset(item.key, '외출 중')}
-                          disabled={updatingRoutineKey === item.key}
-                        >
-                          외출 중
-                        </button>
-                        <button
-                          type="button"
-                          className="filter-chip"
-                          onClick={() => handleRoutineNotePreset(item.key, '저녁에 할 예정')}
-                          disabled={updatingRoutineKey === item.key}
-                        >
-                          저녁에 할 예정
-                        </button>
-                        <button
-                          type="button"
-                          className="filter-chip"
-                          onClick={() => handleRoutineNotePreset(item.key, '완료했는데 기록 안함', true)}
-                          disabled={updatingRoutineKey === item.key}
-                        >
-                          이미 했음
-                        </button>
+                        {getRoutineNotePresets(item).map((preset) => (
+                          <button
+                            key={`${item.key}-${preset.label}`}
+                            type="button"
+                            className="filter-chip"
+                            onClick={() => handleRoutineNotePreset(item.key, preset.note, preset.completed)}
+                            disabled={updatingRoutineKey === item.key}
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
                       </div>
                     ) : null}
                   </div>
