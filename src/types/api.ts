@@ -117,6 +117,8 @@ export type AssistantCopilot = {
   overview: string
   topPriority: string
   suggestedNextAction: string
+  routineSummary: string
+  routineSuggestedAction: string
   risks: string[]
   recommendedIdeas: Array<{
     id: string

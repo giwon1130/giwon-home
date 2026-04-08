@@ -1253,6 +1253,21 @@ export function AssistantPage() {
                 <p className="assistant-detail-text">{copilot?.suggestedNextAction ?? '다음 액션 정보 없음'}</p>
               </div>
             </div>
+            <div className="assistant-insight-panel routine-insight-panel">
+              <span className="control-label">Routine Signal</span>
+              <p className="assistant-detail-text">{copilot?.routineSummary ?? '루틴 요약 정보 없음'}</p>
+              {copilot?.routineSuggestedAction ? (
+                <div className="assistant-tags">
+                  <button
+                    type="button"
+                    className="filter-chip"
+                    onClick={() => setQuestion(`${copilot.routineSuggestedAction}를 오늘 어떤 순서로 처리하면 좋을까?`)}
+                  >
+                    {copilot.routineSuggestedAction}
+                  </button>
+                </div>
+              ) : null}
+            </div>
             <div className="assistant-subgrid assistant-copilot-subgrid">
               <div>
                 <span className="control-label">리스크</span>
