@@ -55,8 +55,8 @@ export function AssistantPage() {
   const [updatingRoutineKey, setUpdatingRoutineKey] = useState<string | null>(null)
   const [isUpdatingCondition, setIsUpdatingCondition] = useState(false)
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
-    condition: false,
-    routine: false,
+    condition: true,
+    routine: true,
     copilot: false,
     briefing: true,
     plan: true,
@@ -1193,6 +1193,55 @@ export function AssistantPage() {
 
       {activeTab === 'dashboard' ? (
         <>
+      <section className="assistant-overview-grid">
+        <article className="assistant-overview-card assistant-overview-card-primary">
+          <span className="control-label">Today Mode Snapshot</span>
+          <strong>{copilot?.operatingMode.title ?? '모드 계산 중'}</strong>
+          <p>{copilot?.headline ?? '오늘 상태를 분석하는 중이야.'}</p>
+          <div className="assistant-tags">
+            {copilot ? <span className="tag-chip">권장 블록 {copilot.operatingMode.recommendedBlockMinutes}분</span> : null}
+            <button type="button" className="filter-chip" onClick={() => handleTabChange('execution')}>
+              실행 탭으로 이동
+            </button>
+          </div>
+        </article>
+        <article className="assistant-overview-card">
+          <span className="control-label">Condition Snapshot</span>
+          <strong>{dailyCondition ? `${dailyCondition.readinessScore}점` : '대기 중'}</strong>
+          <p>{dailyCondition?.summary ?? '컨디션 체크인을 불러오는 중이야.'}</p>
+          <div className="assistant-tags">
+            {dailyCondition ? <span className="tag-chip">추세 {getConditionTrendLabel(dailyCondition.trend)}</span> : null}
+            <button type="button" className="filter-chip" onClick={() => toggleSection('condition')}>
+              {collapsedSections.condition ? '상세 열기' : '상세 닫기'}
+            </button>
+          </div>
+        </article>
+        <article className="assistant-overview-card">
+          <span className="control-label">Routine Snapshot</span>
+          <strong>{dailyRoutine ? `${dailyRoutine.completedCount}/${dailyRoutine.totalCount}` : '대기 중'}</strong>
+          <p>{dailyRoutine?.insight ?? '오늘 루틴 상태를 계산하는 중이야.'}</p>
+          <div className="assistant-tags">
+            {dailyRoutine ? <span className="tag-chip">{getRoutineRiskLabel(dailyRoutine.riskLevel)}</span> : null}
+            <button type="button" className="filter-chip" onClick={() => toggleSection('routine')}>
+              {collapsedSections.routine ? '상세 열기' : '상세 닫기'}
+            </button>
+          </div>
+        </article>
+        <article className="assistant-overview-card assistant-overview-card-accent">
+          <span className="control-label">Next Move</span>
+          <strong>{topOpenAction?.title ?? copilot?.suggestedNextAction ?? '다음 액션 계산 중'}</strong>
+          <p>{topRisk ?? '급한 리스크는 아직 없어. 실행 탭에서 액션과 질문을 이어서 처리하면 돼.'}</p>
+          <div className="assistant-tags">
+            <button type="button" className="filter-chip" onClick={() => handleTabChange('records')}>
+              기록 보기
+            </button>
+            <button type="button" className="filter-chip" onClick={() => handleTabChange('ideas')}>
+              아이디어 보기
+            </button>
+          </div>
+        </article>
+      </section>
+
       <section className="assistant-grid">
         <article className="assistant-card" id="condition-section">
           <div className="section-heading">
