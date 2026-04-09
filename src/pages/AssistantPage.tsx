@@ -194,6 +194,51 @@ export function AssistantPage() {
     { key: 'ideas', label: '아이디어', summary: '캡처와 아카이브' },
   ] as const
 
+  const activeTabContext = (() => {
+    switch (activeTab) {
+      case 'execution':
+        return {
+          title: '지금 처리할 것만 남겨둔 실행 공간',
+          summary: '코파일럿 우선순위, 오늘 브리핑, 질문과 액션만 이어서 처리하는 탭이야.',
+          chips: [
+            `실행 후보 ${executionCandidates.length}개`,
+            `열린 액션 ${openActionsCount}건`,
+            copilotAnswer ? `최근 질문 ${intentLabels[copilotAnswer.intent]}` : '질문 대기',
+          ],
+        }
+      case 'records':
+        return {
+          title: '질문, 회고, 브리핑 이력을 모아보는 기록 공간',
+          summary: '이번 주 흐름과 저장된 대화/브리핑 이력을 한 줄기로 읽는 탭이야.',
+          chips: [
+            `회고 ${weeklyReviewHistory.length}건`,
+            `질문 이력 ${filteredCopilotHistory.length}건`,
+            `브리핑 이력 ${briefingHistory.length}건`,
+          ],
+        }
+      case 'ideas':
+        return {
+          title: '아이디어를 쌓고 실행 후보로 바꾸는 공간',
+          summary: '새로운 아이디어를 저장하고, 강한 신호를 가진 항목부터 액션으로 연결하는 탭이야.',
+          chips: [
+            `아이디어 ${ideas.length}건`,
+            `핵심 신호 ${highSignalIdeasCount}건`,
+            `진행 중 ${inProgressIdeasCount}건`,
+          ],
+        }
+      default:
+        return {
+          title: '오늘 상태를 먼저 판단하는 대시보드',
+          summary: '컨디션, 루틴, 오늘 모드와 핵심 리스크를 빠르게 읽고 다음 탭으로 넘어가는 시작 화면이야.',
+          chips: [
+            dailyCondition ? `준비도 ${dailyCondition.readinessScore}` : '컨디션 대기',
+            dailyRoutine ? `루틴 ${dailyRoutine.completionRate}%` : '루틴 대기',
+            copilot ? `모드 ${getOperatingModeLabel(copilot.operatingMode.code)}` : '모드 대기',
+          ],
+        }
+    }
+  })()
+
   const handleTabChange = (nextTab: typeof assistantTabs[number]['key']) => {
     const nextParams = new URLSearchParams(searchParams)
     if (nextTab === 'dashboard') {
@@ -1189,6 +1234,21 @@ export function AssistantPage() {
             <span>{item.summary}</span>
           </button>
         ))}
+      </section>
+
+      <section className="assistant-tab-context">
+        <div>
+          <p className="eyebrow">Current View</p>
+          <h2>{activeTabContext.title}</h2>
+          <p className="assistant-summary">{activeTabContext.summary}</p>
+        </div>
+        <div className="assistant-tags">
+          {activeTabContext.chips.map((chip) => (
+            <span key={chip} className="tag-chip">
+              {chip}
+            </span>
+          ))}
+        </div>
       </section>
 
       {activeTab === 'dashboard' ? (
