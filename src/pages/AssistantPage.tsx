@@ -1650,6 +1650,29 @@ export function AssistantPage() {
 
       {activeTab === 'records' ? (
         <>
+      <section className="assistant-overview-grid">
+        <article className="assistant-overview-card assistant-overview-card-primary">
+          <span className="control-label">Weekly Snapshot</span>
+          <strong>{weeklyReview ? `${weeklyReview.metrics.actionsCompleted}건 완료` : '회고 계산 중'}</strong>
+          <p>{weeklyReview?.summary ?? '이번 주 흐름을 요약하는 중이야.'}</p>
+        </article>
+        <article className="assistant-overview-card">
+          <span className="control-label">Question Archive</span>
+          <strong>{filteredCopilotHistory.length}건</strong>
+          <p>{filteredCopilotHistory[0]?.question ?? '저장된 질문 이력을 불러오는 중이야.'}</p>
+        </article>
+        <article className="assistant-overview-card">
+          <span className="control-label">Briefing Archive</span>
+          <strong>{briefingHistory.length}건</strong>
+          <p>{briefingHistory[0]?.summary ?? '브리핑 이력을 아직 불러오는 중이야.'}</p>
+        </article>
+        <article className="assistant-overview-card assistant-overview-card-accent">
+          <span className="control-label">Lead Signal</span>
+          <strong>{leadHeadline?.source ?? '신호 대기'}</strong>
+          <p>{leadHeadline?.title ?? latestHistory?.summary ?? '기록 탭에서 최근 외부 신호와 저장 이력을 같이 본다.'}</p>
+        </article>
+      </section>
+
       <section className="assistant-grid">
         <article className="assistant-card assistant-history-card">
           <div className="section-heading">
@@ -2523,6 +2546,29 @@ export function AssistantPage() {
 
       {activeTab === 'ideas' ? (
         <>
+      <section className="assistant-overview-grid">
+        <article className="assistant-overview-card assistant-overview-card-primary">
+          <span className="control-label">Idea Volume</span>
+          <strong>{ideas.length}건</strong>
+          <p>{topSignalIdea?.title ?? '아이디어 저장소를 계속 쌓아가는 중이야.'}</p>
+        </article>
+        <article className="assistant-overview-card">
+          <span className="control-label">핵심 신호</span>
+          <strong>{highSignalIdeasCount}건</strong>
+          <p>바로 제품이나 액션으로 연결할 가치가 높은 아이디어 수.</p>
+        </article>
+        <article className="assistant-overview-card">
+          <span className="control-label">진행 중</span>
+          <strong>{inProgressIdeasCount}건</strong>
+          <p>{sortedIdeas.find((idea) => idea.status === 'IN_PROGRESS')?.title ?? '현재 진행 중인 아이디어가 없으면 OPEN부터 보면 돼.'}</p>
+        </article>
+        <article className="assistant-overview-card assistant-overview-card-accent">
+          <span className="control-label">추천 전환</span>
+          <strong>{topSignalIdea?.suggestedActions[0] ?? '액션 후보 대기'}</strong>
+          <p>{topSignalIdea ? '가장 강한 신호의 아이디어를 바로 액션으로 바꿀 수 있어.' : '아이디어를 더 쌓으면 자동 추천 액션이 같이 뜬다.'}</p>
+        </article>
+      </section>
+
       <section className="assistant-grid assistant-bottom-grid">
         <article className="assistant-card">
           <div className="section-heading">
