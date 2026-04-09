@@ -195,61 +195,6 @@ export function AssistantPage() {
     { key: 'ideas', label: '아이디어', summary: '캡처와 아카이브' },
   ] as const
 
-  const activeTabContext = (() => {
-    switch (activeTab) {
-      case 'routine':
-        return {
-          title: '컨디션과 루틴을 따로 관리하는 생활 탭',
-          summary: '오늘 몸 상태와 생활 루틴을 한곳에서 보고, 누락된 항목을 바로 회복하는 탭이야.',
-          chips: [
-            dailyCondition ? `준비도 ${dailyCondition.readinessScore}` : '컨디션 대기',
-            dailyRoutine ? `완료율 ${dailyRoutine.completionRate}%` : '루틴 대기',
-            dailyRoutine ? `남은 체크 ${incompleteRoutineItems.length}개` : '체크 대기',
-          ],
-        }
-      case 'execution':
-        return {
-          title: '지금 처리할 것만 남겨둔 실행 공간',
-          summary: '코파일럿 우선순위, 오늘 브리핑, 질문과 액션만 이어서 처리하는 탭이야.',
-          chips: [
-            `실행 후보 ${executionCandidates.length}개`,
-            `열린 액션 ${openActionsCount}건`,
-            copilotAnswer ? `최근 질문 ${intentLabels[copilotAnswer.intent]}` : '질문 대기',
-          ],
-        }
-      case 'records':
-        return {
-          title: '질문, 회고, 브리핑 이력을 모아보는 기록 공간',
-          summary: '이번 주 흐름과 저장된 대화/브리핑 이력을 한 줄기로 읽는 탭이야.',
-          chips: [
-            `회고 ${weeklyReviewHistory.length}건`,
-            `질문 이력 ${filteredCopilotHistory.length}건`,
-            `브리핑 이력 ${briefingHistory.length}건`,
-          ],
-        }
-      case 'ideas':
-        return {
-          title: '아이디어를 쌓고 실행 후보로 바꾸는 공간',
-          summary: '새로운 아이디어를 저장하고, 강한 신호를 가진 항목부터 액션으로 연결하는 탭이야.',
-          chips: [
-            `아이디어 ${ideas.length}건`,
-            `핵심 신호 ${highSignalIdeasCount}건`,
-            `진행 중 ${inProgressIdeasCount}건`,
-          ],
-        }
-      default:
-        return {
-          title: '오늘 상태를 먼저 판단하는 대시보드',
-          summary: '오늘 모드, 핵심 리스크, 다음 행동만 빠르게 읽고 다른 탭으로 넘어가는 시작 화면이야.',
-          chips: [
-            copilot ? `모드 ${getOperatingModeLabel(copilot.operatingMode.code)}` : '모드 대기',
-            topRisk ? '리스크 확인 필요' : '리스크 안정',
-            topOpenAction ? '다음 액션 있음' : '액션 대기',
-          ],
-        }
-    }
-  })()
-
   const renderTabContextActions = () => {
     switch (activeTab) {
       case 'routine':
@@ -788,6 +733,92 @@ export function AssistantPage() {
     .sort((left, right) => getModeCandidateBoost(right) - getModeCandidateBoost(left))
     .slice(0, 6)
 
+  const activeTabContext = (() => {
+    switch (activeTab) {
+      case 'routine':
+        return {
+          title: '컨디션과 루틴을 따로 관리하는 생활 탭',
+          summary: '오늘 몸 상태와 생활 루틴을 한곳에서 보고, 누락된 항목을 바로 회복하는 탭이야.',
+          chips: [
+            dailyCondition ? `준비도 ${dailyCondition.readinessScore}` : '컨디션 대기',
+            dailyRoutine ? `완료율 ${dailyRoutine.completionRate}%` : '루틴 대기',
+            dailyRoutine ? `남은 체크 ${incompleteRoutineItems.length}개` : '체크 대기',
+          ],
+        }
+      case 'execution':
+        return {
+          title: '지금 처리할 것만 남겨둔 실행 공간',
+          summary: '코파일럿 우선순위, 오늘 브리핑, 질문과 액션만 이어서 처리하는 탭이야.',
+          chips: [
+            `실행 후보 ${executionCandidates.length}개`,
+            `열린 액션 ${openActionsCount}건`,
+            copilotAnswer ? `최근 질문 ${intentLabels[copilotAnswer.intent]}` : '질문 대기',
+          ],
+        }
+      case 'records':
+        return {
+          title: '질문, 회고, 브리핑 이력을 모아보는 기록 공간',
+          summary: '이번 주 흐름과 저장된 대화/브리핑 이력을 한 줄기로 읽는 탭이야.',
+          chips: [
+            `회고 ${weeklyReviewHistory.length}건`,
+            `질문 이력 ${filteredCopilotHistory.length}건`,
+            `브리핑 이력 ${briefingHistory.length}건`,
+          ],
+        }
+      case 'ideas':
+        return {
+          title: '아이디어를 쌓고 실행 후보로 바꾸는 공간',
+          summary: '새로운 아이디어를 저장하고, 강한 신호를 가진 항목부터 액션으로 연결하는 탭이야.',
+          chips: [
+            `아이디어 ${ideas.length}건`,
+            `핵심 신호 ${highSignalIdeasCount}건`,
+            `진행 중 ${inProgressIdeasCount}건`,
+          ],
+        }
+      default:
+        return {
+          title: '오늘 상태를 먼저 판단하는 대시보드',
+          summary: '오늘 모드, 핵심 리스크, 다음 행동만 빠르게 읽고 다른 탭으로 넘어가는 시작 화면이야.',
+          chips: [
+            copilot ? `모드 ${getOperatingModeLabel(copilot.operatingMode.code)}` : '모드 대기',
+            topRisk ? '리스크 확인 필요' : '리스크 안정',
+            topOpenAction ? '다음 액션 있음' : '액션 대기',
+          ],
+        }
+    }
+  })()
+
+  const compactStats = (() => {
+    switch (activeTab) {
+      case 'routine':
+        return [
+          { label: 'Condition', value: dailyCondition ? `${dailyCondition.readinessScore}점` : '대기', detail: '오늘 컨디션 준비도' },
+          { label: 'Routine', value: dailyRoutine ? `${dailyRoutine.completedCount}/${dailyRoutine.totalCount}` : '대기', detail: '오늘 루틴 체크 수' },
+          { label: 'Recovery', value: dailyRoutine?.recoveryScore ?? '-', detail: '회복 점수' },
+        ]
+      case 'execution':
+        return [
+          { label: 'Execution', value: executionCandidates.length, detail: '실행 후보 수' },
+          { label: 'Open Actions', value: openActionsCount, detail: '남아 있는 액션' },
+          { label: 'Question', value: copilotAnswer ? intentLabels[copilotAnswer.intent] : '대기', detail: '최근 질문 상태' },
+        ]
+      case 'records':
+        return [
+          { label: 'Review', value: weeklyReviewHistory.length, detail: '저장된 회고' },
+          { label: 'History', value: filteredCopilotHistory.length, detail: '질문 이력 수' },
+          { label: 'Briefings', value: briefingHistory.length, detail: '브리핑 이력 수' },
+        ]
+      case 'ideas':
+        return [
+          { label: 'Ideas', value: ideas.length, detail: '저장된 아이디어' },
+          { label: 'High Signal', value: highSignalIdeasCount, detail: '핵심 신호 아이디어' },
+          { label: 'In Progress', value: inProgressIdeasCount, detail: '진행 중 아이디어' },
+        ]
+      default:
+        return []
+    }
+  })()
+
   const startActionEdit = (action: AssistantAction) => {
     setEditingActionId(action.id)
     setEditingActionPriority(action.priority)
@@ -1225,37 +1256,6 @@ export function AssistantPage() {
     now.setHours(18, 0, 0, 0)
     setEditingActionDueDate(now.toISOString().slice(0, 16))
   }
-
-  const compactStats = (() => {
-    switch (activeTab) {
-      case 'routine':
-        return [
-          { label: 'Condition', value: dailyCondition ? `${dailyCondition.readinessScore}점` : '대기', detail: '오늘 컨디션 준비도' },
-          { label: 'Routine', value: dailyRoutine ? `${dailyRoutine.completedCount}/${dailyRoutine.totalCount}` : '대기', detail: '오늘 루틴 체크 수' },
-          { label: 'Recovery', value: dailyRoutine?.recoveryScore ?? '-', detail: '회복 점수' },
-        ]
-      case 'execution':
-        return [
-          { label: 'Execution', value: executionCandidates.length, detail: '실행 후보 수' },
-          { label: 'Open Actions', value: openActionsCount, detail: '남아 있는 액션' },
-          { label: 'Question', value: copilotAnswer ? intentLabels[copilotAnswer.intent] : '대기', detail: '최근 질문 상태' },
-        ]
-      case 'records':
-        return [
-          { label: 'Review', value: weeklyReviewHistory.length, detail: '저장된 회고' },
-          { label: 'History', value: filteredCopilotHistory.length, detail: '질문 이력 수' },
-          { label: 'Briefings', value: briefingHistory.length, detail: '브리핑 이력 수' },
-        ]
-      case 'ideas':
-        return [
-          { label: 'Ideas', value: ideas.length, detail: '저장된 아이디어' },
-          { label: 'High Signal', value: highSignalIdeasCount, detail: '핵심 신호 아이디어' },
-          { label: 'In Progress', value: inProgressIdeasCount, detail: '진행 중 아이디어' },
-        ]
-      default:
-        return []
-    }
-  })()
 
   return (
     <main className="page-shell assistant-dashboard">
