@@ -138,7 +138,8 @@ export function HomePage() {
             <div className="representative-copy">
               <p className="eyebrow">Representative Service</p>
               <h2>{representativeProject.name}</h2>
-              <p>{representativeProject.summary}</p>
+              <p>{representativeProject.headline ?? representativeProject.summary}</p>
+              {representativeProject.headline ? <p className="representative-detail">{representativeProject.summary}</p> : null}
               <div className="representative-tags">
                 {representativeProject.tags.slice(0, 5).map((tag) => (
                   <span key={tag} className="tag-chip">

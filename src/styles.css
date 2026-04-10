@@ -195,6 +195,11 @@ a {
   line-height: 1.7;
 }
 
+.representative-detail {
+  color: #64748b;
+  font-size: 15px;
+}
+
 .representative-tags {
   display: flex;
   flex-wrap: wrap;
