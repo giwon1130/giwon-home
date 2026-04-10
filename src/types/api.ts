@@ -51,14 +51,17 @@ export type AssistantBriefing = {
   calendar: Array<{
     time: string
     title: string
+    mock?: boolean
   }>
   headlines: Array<{
     source: string
     title: string
+    mock?: boolean
   }>
   tasks: Array<{
     priority: string
     title: string
+    mock?: boolean
   }>
   focusSuggestion: string
 }
@@ -75,14 +78,17 @@ export type AssistantBriefingHistory = {
   calendar: Array<{
     time: string
     title: string
+    mock?: boolean
   }>
   headlines: Array<{
     source: string
     title: string
+    mock?: boolean
   }>
   tasks: Array<{
     priority: string
     title: string
+    mock?: boolean
   }>
   focusSuggestion: string
 }
@@ -278,6 +284,7 @@ export type AssistantWeeklyReview = {
     ideasCaptured: number
     routineChecksCompleted: number
     routineCompletionDays: number
+    briefingsGenerated?: number
   }
   wins: string[]
   risks: string[]
