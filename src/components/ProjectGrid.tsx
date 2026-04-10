@@ -34,7 +34,24 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
       PLANNING: 2,
     }
 
-    return priority[left.status as keyof typeof priority] - priority[right.status as keyof typeof priority]
+    const statusGap = priority[left.status as keyof typeof priority] - priority[right.status as keyof typeof priority]
+    if (statusGap !== 0) {
+      return statusGap
+    }
+
+    const featuredNamePriority = (project: Project) => {
+      if (project.name === 'SignalDesk') return 0
+      if (project.name === 'RouteOps') return 1
+      if (project.name === 'MetroPulse') return 2
+      return 3
+    }
+
+    const featuredGap = featuredNamePriority(left) - featuredNamePriority(right)
+    if (featuredGap !== 0) {
+      return featuredGap
+    }
+
+    return right.tags.length - left.tags.length
   })
 
   return (

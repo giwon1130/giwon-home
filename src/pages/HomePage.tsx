@@ -48,6 +48,9 @@ export function HomePage() {
     .slice(0, 3)
   const featuredProjectIds = new Set(featuredProjects.map((project) => project.id))
   const remainingProjects = projects.filter((project) => !featuredProjectIds.has(project.id))
+  const representativeProject =
+    projects.find((project) => project.name === 'SignalDesk')
+    ?? featuredProjects[0]
 
   useEffect(() => {
     Promise.all([getProfileApi(), getProjectsApi()])
@@ -128,6 +131,43 @@ export function HomePage() {
           <p>다음 단계로 준비 중인 아이디어</p>
         </article>
       </section>
+
+      {representativeProject ? (
+        <section className="section-block">
+          <article className="representative-card">
+            <div className="representative-copy">
+              <p className="eyebrow">Representative Service</p>
+              <h2>{representativeProject.name}</h2>
+              <p>{representativeProject.summary}</p>
+              <div className="representative-tags">
+                {representativeProject.tags.slice(0, 5).map((tag) => (
+                  <span key={tag} className="tag-chip">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="representative-links">
+              <span className={`project-status ${representativeProject.status.toLowerCase()}`}>{representativeProject.status}</span>
+              {representativeProject.liveUrl ? (
+                <a href={representativeProject.liveUrl} target="_blank" rel="noreferrer">
+                  Live Service
+                </a>
+              ) : null}
+              {representativeProject.repositoryUrl ? (
+                <a href={representativeProject.repositoryUrl} target="_blank" rel="noreferrer">
+                  Repository
+                </a>
+              ) : null}
+              {representativeProject.docsUrl ? (
+                <a href={representativeProject.docsUrl} target="_blank" rel="noreferrer">
+                  Docs
+                </a>
+              ) : null}
+            </div>
+          </article>
+        </section>
+      ) : null}
 
       {profile ? (
         <section className="section-block">
