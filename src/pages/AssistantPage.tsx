@@ -1,193 +1,52 @@
-import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
-import { askCopilotApi, createActionApi, createIdeaApi, getActionSummaryApi, getActionsApi, getBriefingAudioApi, getBriefingHistoryApi, getCopilotHistoryApi, getDailyConditionApi, getDailyRoutineApi, getIdeasApi, getTodayBriefingApi, getTodayCopilotApi, getTodayPlanApi, getWeeklyReviewApi, getWeeklyReviewHistoryApi, updateActionApi, updateActionStatusApi, updateDailyConditionApi, updateDailyRoutineApi, updateIdeaApi } from '../api/assistantApi'
-import type { AssistantAction, AssistantActionSummary, AssistantBriefing, AssistantBriefingHistory, AssistantCopilot, AssistantCopilotAskResponse, AssistantCopilotHistory, AssistantDailyCondition, AssistantDailyRoutine, AssistantIdea, AssistantPlan, AssistantWeeklyReview, AssistantWeeklyReviewSnapshot } from '../types/api'
+import { Link } from 'react-router-dom'
+import type { AssistantCopilotAskResponse } from '../types/api'
+import { useAssistantPage } from './assistant/useAssistantPage'
 
 export function AssistantPage() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const {
+    briefing, briefingHistory, copilot, copilotHistory, plan, ideas, actions, actionSummary,
+    dailyCondition, dailyRoutine, weeklyReview, weeklyReviewHistory,
+    title, setTitle, rawText, setRawText, tags, setTags, question, setQuestion,
+    copilotAnswer, errorMessage, setErrorMessage,
+    isSubmitting, isAsking, isLoading, isRefreshing, isPlayingAudio, showFallbackReason, setShowFallbackReason,
+    expandedHistoryId, setExpandedHistoryId, expandedIdeaId, setExpandedIdeaId,
+    editingIdeaId, editingTitle, setEditingTitle, editingRawText, setEditingRawText, editingTags, setEditingTags,
+    editingActionId, editingActionPriority, setEditingActionPriority, editingActionDueDate, setEditingActionDueDate,
+    ideaFilter, setIdeaFilter, ideaSearch, setIdeaSearch,
+    actionFilter, setActionFilter, actionFocusFilter, setActionFocusFilter,
+    historyIntentFilter, setHistoryIntentFilter, historySearch, setHistorySearch,
+    updatingIdeaId, isSavingAction, updatingActionId, updatingRoutineKey, isUpdatingCondition,
+    collapsedSections,
+    activeTab, handleTabChange, toggleSection,
+    latestHistory, recentIdeasCount, openActionsCount, overdueActionsCount,
+    incompleteRoutineItems, completedRoutineItems,
+    filteredIdeas, searchedIdeas, sortedIdeas, filteredCopilotHistory,
+    filteredActions, focusedActions, sortedActions,
+    uniqueHeadlineSources, leadHeadline, topRisk,
+    inProgressIdeasCount, highSignalIdeasCount, actionTitles, routineActionTitles,
+    topSignalIdea, topOpenAction, topIncompleteRoutine, executionCandidates,
+    formatDateTime, getDueState, getDueStateLabel,
+    getRoutineRiskLabel, getRoutineSignalLabel, getConditionTrendLabel, getOperatingModeLabel,
+    getIdeaSignalScore, getIdeaSignalLabel, getModeActionHint, getModeCandidateHint,
+    toLocalDateTimeValue, buildCandidateDueDate, getRoutineNotePresets,
+    startActionEdit, resetActionEdit, applyActionDuePreset,
+    startIdeaEdit, resetIdeaEdit,
+    loadAssistantData,
+    handleSubmit, handleAskCopilot,
+    handleIdeaStatusChange, handleIdeaEditSave,
+    handleReuseQuestion, handleFocusIdea, handleFocusAction,
+    handleCreateActionFromSuggestion, handleCreateActionCandidate, handleCreateAllExecutionCandidates,
+    handleCreateActionFromIdea, handleCaptureHeadlineAsIdea, handleCreateActionFromHistory,
+    handleActionStatusChange, handleActionMetaSave,
+    handleRoutineToggle, handleConditionQuickUpdate, handleRoutineNotePreset, handleCreateActionFromRoutine,
+    handlePlayBriefingAudio,
+  } = useAssistantPage()
+
   const suggestedQuestions = [
     '오늘 뭐부터 하면 좋을까?',
     '지금 열어둔 아이디어 중 뭘 먼저 진행할까?',
     '오늘 일정 기준으로 언제 집중 작업하는 게 좋을까?',
   ] as const
-
-  const [briefing, setBriefing] = useState<AssistantBriefing | null>(null)
-  const [briefingHistory, setBriefingHistory] = useState<AssistantBriefingHistory[]>([])
-  const [copilot, setCopilot] = useState<AssistantCopilot | null>(null)
-  const [copilotHistory, setCopilotHistory] = useState<AssistantCopilotHistory[]>([])
-  const [plan, setPlan] = useState<AssistantPlan | null>(null)
-  const [ideas, setIdeas] = useState<AssistantIdea[]>([])
-  const [actions, setActions] = useState<AssistantAction[]>([])
-  const [actionSummary, setActionSummary] = useState<AssistantActionSummary | null>(null)
-  const [dailyCondition, setDailyCondition] = useState<AssistantDailyCondition | null>(null)
-  const [dailyRoutine, setDailyRoutine] = useState<AssistantDailyRoutine | null>(null)
-  const [weeklyReview, setWeeklyReview] = useState<AssistantWeeklyReview | null>(null)
-  const [weeklyReviewHistory, setWeeklyReviewHistory] = useState<AssistantWeeklyReviewSnapshot[]>([])
-  const [title, setTitle] = useState('')
-  const [rawText, setRawText] = useState('')
-  const [tags, setTags] = useState('')
-  const [question, setQuestion] = useState('')
-  const [copilotAnswer, setCopilotAnswer] = useState<AssistantCopilotAskResponse | null>(null)
-  const [errorMessage, setErrorMessage] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isAsking, setIsAsking] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [expandedHistoryId, setExpandedHistoryId] = useState<string | null>(null)
-  const [expandedIdeaId, setExpandedIdeaId] = useState<string | null>(null)
-  const [editingIdeaId, setEditingIdeaId] = useState<string | null>(null)
-  const [editingTitle, setEditingTitle] = useState('')
-  const [editingRawText, setEditingRawText] = useState('')
-  const [editingTags, setEditingTags] = useState('')
-  const [ideaFilter, setIdeaFilter] = useState<'ALL' | 'OPEN' | 'IN_PROGRESS' | 'DONE'>('ALL')
-  const [ideaSearch, setIdeaSearch] = useState('')
-  const [actionFilter, setActionFilter] = useState<'ALL' | 'OPEN' | 'DONE'>('ALL')
-  const [actionFocusFilter, setActionFocusFilter] = useState<'ALL' | 'OVERDUE' | 'DUE_SOON' | 'HIGH_PRIORITY'>('ALL')
-  const [historyIntentFilter, setHistoryIntentFilter] = useState<'ALL' | 'PRIORITY' | 'TIME' | 'IDEA' | 'RISK' | 'SUMMARY'>('ALL')
-  const [historySearch, setHistorySearch] = useState('')
-  const [updatingIdeaId, setUpdatingIdeaId] = useState<string | null>(null)
-  const [isSavingAction, setIsSavingAction] = useState<string | null>(null)
-  const [updatingActionId, setUpdatingActionId] = useState<string | null>(null)
-  const [showFallbackReason, setShowFallbackReason] = useState(false)
-  const [editingActionId, setEditingActionId] = useState<string | null>(null)
-  const [editingActionPriority, setEditingActionPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH'>('MEDIUM')
-  const [editingActionDueDate, setEditingActionDueDate] = useState('')
-  const [updatingRoutineKey, setUpdatingRoutineKey] = useState<string | null>(null)
-  const [isUpdatingCondition, setIsUpdatingCondition] = useState(false)
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false)
-  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
-    condition: true,
-    routine: true,
-    routineCompleted: true,
-    copilot: false,
-    briefing: true,
-    plan: true,
-    execution: false,
-    actions: false,
-    history: true,
-    ideas: true,
-  })
-
-  const intentLabels: Record<AssistantCopilotAskResponse['intent'], string> = {
-    PRIORITY: '우선순위',
-    TIME: '시간 계획',
-    IDEA: '아이디어',
-    RISK: '리스크',
-    SUMMARY: '요약',
-  }
-
-  const formatDateTime = (value: string) =>
-    new Date(value).toLocaleString('ko-KR', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-
-  const getPriorityWeight = (priority: AssistantAction['priority']) => {
-    switch (priority) {
-      case 'HIGH':
-        return 3
-      case 'MEDIUM':
-        return 2
-      case 'LOW':
-        return 1
-      default:
-        return 0
-    }
-  }
-
-  const getDueState = (action: AssistantAction) => {
-    if (action.status === 'DONE' || !action.dueDate) {
-      return 'NONE' as const
-    }
-
-    const dueTime = new Date(action.dueDate).getTime()
-    const now = Date.now()
-    const diffHours = (dueTime - now) / (1000 * 60 * 60)
-
-    if (diffHours < 0) {
-      return 'OVERDUE' as const
-    }
-
-    if (diffHours <= 24) {
-      return 'DUE_SOON' as const
-    }
-
-    return 'SCHEDULED' as const
-  }
-
-  const getDueStateLabel = (state: ReturnType<typeof getDueState>) => {
-    switch (state) {
-      case 'OVERDUE':
-        return '지연'
-      case 'DUE_SOON':
-        return '임박'
-      case 'SCHEDULED':
-        return '예정'
-      default:
-        return '여유'
-    }
-  }
-
-  const getRoutineRiskLabel = (riskLevel: AssistantDailyRoutine['riskLevel']) => {
-    switch (riskLevel) {
-      case 'HIGH':
-        return '즉시 복구'
-      case 'MEDIUM':
-        return '관리 필요'
-      default:
-        return '안정'
-    }
-  }
-
-  const getRoutineSignalLabel = (status: AssistantDailyRoutine['signals'][number]['status']) => {
-    switch (status) {
-      case 'GOOD':
-        return '양호'
-      case 'WATCH':
-        return '주의'
-      case 'ALERT':
-        return '경고'
-      default:
-        return '준비'
-    }
-  }
-
-  const getConditionTrendLabel = (trend: AssistantDailyCondition['trend']) => {
-    switch (trend) {
-      case 'UP':
-        return '상승'
-      case 'DOWN':
-        return '하락'
-      default:
-        return '유지'
-    }
-  }
-
-  const getOperatingModeLabel = (code: AssistantCopilot['operatingMode']['code']) => {
-    switch (code) {
-      case 'RESET':
-        return '리셋'
-      case 'RECOVERY':
-        return '회복'
-      case 'DEEP_FOCUS':
-        return '딥포커스'
-      default:
-        return '안정'
-    }
-  }
-
-  const toggleSection = (key: keyof typeof collapsedSections) => {
-    setCollapsedSections((previous) => ({
-      ...previous,
-      [key]: !previous[key],
-    }))
-  }
-
-  const tab = searchParams.get('tab')
-  const activeTab: 'dashboard' | 'routine' | 'execution' | 'records' | 'ideas' =
-    tab === 'routine' || tab === 'execution' || tab === 'records' || tab === 'ideas' ? tab : 'dashboard'
 
   const assistantTabs = [
     { key: 'dashboard', label: '대시보드', summary: '상태 판단과 오늘 모드' },
@@ -196,6 +55,14 @@ export function AssistantPage() {
     { key: 'records', label: '기록', summary: '회고와 히스토리' },
     { key: 'ideas', label: '아이디어', summary: '캡처와 아카이브' },
   ] as const
+
+  const intentLabels: Record<AssistantCopilotAskResponse['intent'], string> = {
+    PRIORITY: '우선순위',
+    TIME: '시간 계획',
+    IDEA: '아이디어',
+    RISK: '리스크',
+    SUMMARY: '요약',
+  }
 
   const renderTabContextActions = () => {
     switch (activeTab) {
@@ -278,16 +145,6 @@ export function AssistantPage() {
           </>
         )
     }
-  }
-
-  const handleTabChange = (nextTab: typeof assistantTabs[number]['key']) => {
-    const nextParams = new URLSearchParams(searchParams)
-    if (nextTab === 'dashboard') {
-      nextParams.delete('tab')
-    } else {
-      nextParams.set('tab', nextTab)
-    }
-    setSearchParams(nextParams, { replace: true })
   }
 
   const getModeActionBoost = (action: AssistantAction) => {
