@@ -1849,6 +1849,15 @@ input, textarea, select {
 
 .assistant-streaming-text { color: var(--t2); }
 
+.copilot-streaming-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--brand);
+}
+
 .streaming-cursor {
   display: inline-block;
   width: 2px;

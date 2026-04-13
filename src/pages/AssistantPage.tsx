@@ -1025,8 +1025,8 @@ export function AssistantPage() {
         </article>
         <article className="assistant-overview-card assistant-overview-card-accent">
           <span className="control-label">Question</span>
-          <strong>{copilotAnswer ? intentLabels[copilotAnswer.intent] : '질문 대기'}</strong>
-          <p>{copilotAnswer?.answer ?? '막히는 지점이 있으면 아래 질문 카드에서 바로 물어보면 돼.'}</p>
+          <strong>{isStreaming ? '생성 중...' : copilotAnswer ? intentLabels[copilotAnswer.intent] : '질문 대기'}</strong>
+          <p>{isStreaming ? streamingText.slice(0, 80) + (streamingText.length > 80 ? '...' : '') : copilotAnswer?.answer ?? '막히는 지점이 있으면 아래 질문 카드에서 바로 물어보면 돼.'}</p>
         </article>
       </section>
 
@@ -1344,6 +1344,12 @@ export function AssistantPage() {
               {isStreaming ? '스트리밍 중...' : isAsking ? '답변 생성 중...' : '코파일럿에게 질문'}
             </button>
           </form>
+          {isStreaming && (
+            <div className="copilot-streaming-status">
+              <span className="streaming-cursor" />
+              <span>답변을 생성하고 있어 — 아래에서 실시간으로 확인 가능해.</span>
+            </div>
+          )}
         </article>
 
         <article className="assistant-card">
