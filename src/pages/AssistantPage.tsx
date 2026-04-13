@@ -49,11 +49,11 @@ export function AssistantPage() {
   ] as const
 
   const assistantTabs = [
-    { key: 'dashboard', label: '대시보드', summary: '상태 판단과 오늘 모드' },
-    { key: 'routine', label: '루틴', summary: '컨디션과 생활 체크' },
-    { key: 'execution', label: '실행', summary: '브리핑, 질문, 액션' },
-    { key: 'records', label: '기록', summary: '회고와 히스토리' },
-    { key: 'ideas', label: '아이디어', summary: '캡처와 아카이브' },
+    { key: 'dashboard', label: '대시보드', icon: '⊞', summary: '상태 판단과 오늘 모드' },
+    { key: 'routine',   label: '루틴',     icon: '◎', summary: '컨디션과 생활 체크' },
+    { key: 'execution', label: '실행',     icon: '▷', summary: '브리핑, 질문, 액션' },
+    { key: 'records',   label: '기록',     icon: '≡', summary: '회고와 히스토리' },
+    { key: 'ideas',     label: '아이디어', icon: '◇', summary: '캡처와 아카이브' },
   ] as const
 
   const intentLabels: Record<AssistantCopilotAskResponse['intent'], string> = {
@@ -236,54 +236,59 @@ export function AssistantPage() {
   return (
     <main className="page-shell assistant-dashboard">
       <header className="assistant-hero">
-        <div>
-          <p className="eyebrow">AI Assistant</p>
-          <h1>개인 비서 대시보드</h1>
-          <p className="hero-summary">
-            아침 브리핑, 오늘 계획, 아이디어 저장을 한 화면에서 다루는 개인용 보조 공간
-          </p>
-          {copilot ? (
-            <div className="assistant-news-highlight">
-              <span className="control-label">Today Mode</span>
-              <strong>{copilot.operatingMode.title} · {getOperatingModeLabel(copilot.operatingMode.code)}</strong>
-              <p>{copilot.operatingMode.summary}</p>
-              <div className="assistant-tags">
-                <span className="tag-chip">권장 블록 {copilot.operatingMode.recommendedBlockMinutes}분</span>
+        <div className="assistant-hero-copy">
+          <div className="assistant-hero-top">
+            <div>
+              <p className="eyebrow">AI Assistant</p>
+              <h1>개인 비서 대시보드</h1>
+            </div>
+            <div className="hero-actions">
+              <button
+                className="secondary-link action-button"
+                type="button"
+                onClick={() => loadAssistantData({ silent: true })}
+                disabled={isRefreshing}
+              >
+                {isRefreshing ? '새로고침 중...' : '↻ 새로고침'}
+              </button>
+              <Link className="secondary-link" to="/">← 홈</Link>
+            </div>
+          </div>
+          {isLoading ? (
+            <p className="assistant-loading-text">데이터 불러오는 중...</p>
+          ) : copilot ? (
+            <div className="assistant-mode-banner">
+              <div className="assistant-mode-badge">{getOperatingModeLabel(copilot.operatingMode.code)}</div>
+              <div className="assistant-mode-content">
+                <strong>{copilot.operatingMode.title}</strong>
+                <p>{copilot.operatingMode.summary}</p>
+              </div>
+              <div className="assistant-mode-meta">
+                <span className="tag-chip">블록 {copilot.operatingMode.recommendedBlockMinutes}분</span>
                 <button
                   type="button"
                   className="filter-chip"
                   onClick={() => setQuestion(`${copilot.operatingMode.title} 기준으로 오늘 일정을 어떻게 운영하면 좋을까?`)}
                 >
-                  모드 기준으로 질문하기
+                  모드 질문하기
                 </button>
               </div>
             </div>
           ) : null}
-          <div className="hero-actions">
-            <button
-              className="secondary-link action-button"
-              type="button"
-              onClick={() => loadAssistantData({ silent: true })}
-              disabled={isRefreshing}
-            >
-              {isRefreshing ? '새로고침 중...' : '새로고침'}
-            </button>
-            <Link className="secondary-link" to="/">
-              Back Home
-            </Link>
-          </div>
         </div>
         <div className="assistant-status-card">
-          <span className="control-label">Assistant Status</span>
-          <strong>{briefing?.weather.location ?? 'Seoul'}</strong>
-          <p>
-            {briefing
-              ? `${briefing.weather.condition} · ${briefing.weather.temperatureCelsius}°C`
-              : '연결 대기 중'}
-          </p>
+          <span className="control-label">날씨 · 현재</span>
+          <strong className="assistant-weather-temp">
+            {briefing ? `${briefing.weather.temperatureCelsius}°C` : '--°C'}
+          </strong>
+          <p>{briefing ? `${briefing.weather.location} · ${briefing.weather.condition}` : '연결 대기 중'}</p>
           <div className="assistant-status-meta">
-            <span>최근 브리핑 {briefing ? formatDateTime(briefing.generatedAt) : '-'}</span>
-            <span>열린 아이디어 {recentIdeasCount}건</span>
+            <span>브리핑 {briefing ? formatDateTime(briefing.generatedAt) : '-'}</span>
+            <span>아이디어 {recentIdeasCount}건</span>
+            <span>액션 {openActionsCount}건</span>
+            {overdueActionsCount > 0 && (
+              <span className="assistant-status-alert">지연 {overdueActionsCount}건</span>
+            )}
           </div>
         </div>
       </header>
@@ -343,8 +348,8 @@ export function AssistantPage() {
             className={`assistant-tab-button ${activeTab === item.key ? 'active' : ''}`}
             onClick={() => handleTabChange(item.key)}
           >
+            <span className="tab-icon">{item.icon}</span>
             <strong>{item.label}</strong>
-            <span>{item.summary}</span>
           </button>
         ))}
       </section>
