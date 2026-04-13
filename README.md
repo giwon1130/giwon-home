@@ -111,6 +111,9 @@ PUBLIC_URL_HOME=http://localhost:4173
 PUBLIC_URL_ASSISTANT=http://localhost:4173/assistant
 PUBLIC_URL_HOME_HARMONY=http://127.0.0.1:4179
 PUBLIC_URL_ROUTE_OPS=http://localhost:4174
+PUBLIC_URL_METRO_PULSE=http://localhost:4175
+PUBLIC_URL_SHELTER_NOW=http://localhost:4177
+PUBLIC_URL_EMERGENCY_ROOM=http://localhost:4178
 PUBLIC_URL_SIGNAL_DESK=http://localhost:4180
 ```
 

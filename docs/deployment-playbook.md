@@ -19,6 +19,11 @@
 ```bash
 PUBLIC_URL_HOME=https://home.example.com
 PUBLIC_URL_ASSISTANT=https://home.example.com/assistant
+PUBLIC_URL_HOME_HARMONY=https://home-harmony.example.com
+PUBLIC_URL_ROUTE_OPS=https://route.example.com
+PUBLIC_URL_METRO_PULSE=https://metro.example.com
+PUBLIC_URL_SHELTER_NOW=https://shelter.example.com
+PUBLIC_URL_EMERGENCY_ROOM=https://er.example.com
 PUBLIC_URL_SIGNAL_DESK=https://signal.example.com
 ```
 
@@ -33,6 +38,20 @@ docker compose up --build -d
 - `giwon-home-api`, `giwon-assistant-api` healthcheck 포함
 - `giwon-home`은 두 API가 `healthy`가 된 뒤 기동
 - 허브 카드 `liveUrl`은 `PUBLIC_URL_*` 환경변수에서 읽음
+- `MetroPulse`, `ShelterNow`, `Emergency Room`, `RouteOps`, `HomeHarmony`, `SignalDesk`도 허브에서 env로 주소를 분리한다
+
+## 공개 배포 전략
+- 메인 공개 주소는 `giwon-home`으로 유지
+- 서비스별 공개는 가능하면 서브도메인 기준으로 분리
+  - `home.<domain>`
+  - `signal.<domain>`
+  - `route.<domain>`
+  - `metro.<domain>`
+  - `shelter.<domain>`
+  - `er.<domain>`
+  - `home-harmony.<domain>`
+- path 기반 공개도 가능하지만, SPA base path와 프록시 설정이 더 복잡해지므로 1차는 서브도메인 방식이 더 단순하다
+- API 컨테이너, DB, Redis는 직접 외부 노출하지 않고 reverse proxy 또는 내부 네트워크 뒤에 둔다
 
 ## 검증
 ```bash
@@ -45,3 +64,4 @@ curl -i http://127.0.0.1:8080/api/v1/briefings/today
 - 현재는 GitHub Actions 자동 배포가 아니라 수동 compose 재기동 기준이다.
 - 외부 공개 시 `localhost`, `127.0.0.1` 링크가 남지 않도록 `.env`를 먼저 바꿔야 한다.
 - 다른 서비스와 포트 충돌이 있으면 직접 포트를 열지 말고 reverse proxy 뒤로 붙이는 방향을 우선한다.
+- 실제 공개 전에는 `/api/projects` 응답의 `liveUrl`이 도메인 기준으로 바뀌었는지 먼저 확인한다.
