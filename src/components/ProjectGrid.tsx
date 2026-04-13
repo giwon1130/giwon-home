@@ -40,7 +40,8 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
             </span>
           </div>
 
-          <p className="project-summary">{project.summary}</p>
+          <p className="project-summary">{project.headline ?? project.summary}</p>
+          {project.headline ? <p className="project-detail">{project.summary}</p> : null}
 
           {project.tags.length > 0 && (
             <div className="tag-list">

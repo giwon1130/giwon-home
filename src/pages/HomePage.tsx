@@ -208,7 +208,8 @@ export function HomePage() {
                 <span className="featured-project-category">{project.category}</span>
               </div>
               <h3>{project.name}</h3>
-              <p>{project.summary}</p>
+              <p>{project.headline ?? project.summary}</p>
+              {project.headline ? <p className="featured-project-detail">{project.summary}</p> : null}
               <div className="featured-project-tags">
                 {project.tags.slice(0, 4).map((tag) => (
                   <span key={tag} className="tag-chip">

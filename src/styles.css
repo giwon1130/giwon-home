@@ -596,6 +596,10 @@ input, textarea, select {
   font-size: 13px;
 }
 
+.featured-project-detail {
+  color: var(--t4);
+}
+
 .featured-project-category {
   color: var(--brand);
   font-size: 11px;
@@ -683,6 +687,13 @@ input, textarea, select {
   color: var(--t3);
   line-height: 1.7;
   font-size: 13px;
+}
+
+.project-detail {
+  margin: 8px 0 0;
+  color: var(--t4);
+  line-height: 1.7;
+  font-size: 12px;
 }
 
 .project-meta {
