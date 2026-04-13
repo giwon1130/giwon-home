@@ -179,12 +179,15 @@ export function HomePage() {
             </div>
           </div>
           <div className="quick-link-grid">
-            {Object.entries(profile.links).map(([label, href]) => (
-              <a key={label} className="quick-link-card" href={href} target="_blank" rel="noreferrer">
-                <span className="control-label">{label}</span>
-                <strong>{href.replace(/^https?:\/\//, '')}</strong>
-              </a>
-            ))}
+            {Object.entries(profile.links).map(([label, href]) => {
+              const domain = href.replace(/^https?:\/\//, '').split('/')[0]
+              return (
+                <a key={label} className="quick-link-card" href={href} target="_blank" rel="noreferrer">
+                  <span className="control-label">{label}</span>
+                  <strong>{domain}</strong>
+                </a>
+              )
+            })}
           </div>
         </section>
       ) : null}
