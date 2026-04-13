@@ -49,6 +49,7 @@ docker compose up --build
 - `restart: unless-stopped`와 healthcheck를 포함해 로컬/소형 서버 운영 기준으로 보강했다.
 - 공개 배포 시에는 `.env`에서 `PUBLIC_URL_*` 값을 실제 도메인으로 바꿔 허브 카드 링크를 맞춘다.
 - 자세한 절차는 [docs/deployment-playbook.md](./docs/deployment-playbook.md)에 정리했다.
+- Caddy 예시는 [docs/caddy/Caddyfile.example](./docs/caddy/Caddyfile.example), 서버 절차는 [docs/server-runbook.md](./docs/server-runbook.md)에 정리했다.
 
 ## Deployment Baseline
 현재 허브에서 연결하는 주요 공개 프로젝트는 아래 기준까지 정리된 상태다.

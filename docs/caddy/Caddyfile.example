@@ -1,0 +1,29 @@
+home.giwon.dev {
+	reverse_proxy /api/* 127.0.0.1:8081
+	reverse_proxy /assistant-api/* 127.0.0.1:8080
+	reverse_proxy 127.0.0.1:4173
+}
+
+signal.giwon.dev {
+	reverse_proxy 127.0.0.1:4180
+}
+
+route.giwon.dev {
+	reverse_proxy 127.0.0.1:4174
+}
+
+metro.giwon.dev {
+	reverse_proxy 127.0.0.1:4175
+}
+
+shelter.giwon.dev {
+	reverse_proxy 127.0.0.1:4177
+}
+
+er.giwon.dev {
+	reverse_proxy 127.0.0.1:4178
+}
+
+harmony.giwon.dev {
+	reverse_proxy 127.0.0.1:4179
+}

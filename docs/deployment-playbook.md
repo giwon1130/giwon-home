@@ -52,6 +52,8 @@ docker compose up --build -d
   - `home-harmony.<domain>`
 - path 기반 공개도 가능하지만, SPA base path와 프록시 설정이 더 복잡해지므로 1차는 서브도메인 방식이 더 단순하다
 - API 컨테이너, DB, Redis는 직접 외부 노출하지 않고 reverse proxy 또는 내부 네트워크 뒤에 둔다
+- 실제 reverse proxy 예시는 [docs/caddy/Caddyfile.example](./caddy/Caddyfile.example)에 둔다
+- 실제 서버 절차는 [docs/server-runbook.md](./server-runbook.md) 기준으로 맞춘다
 
 ## 검증
 ```bash
