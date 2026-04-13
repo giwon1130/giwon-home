@@ -15,6 +15,13 @@
 - 백엔드 `profile/projects` API 연동
 - 프로젝트 카드별 `Live / Repository / Docs` 링크 노출
 - 대표 서비스의 최신 상태를 허브 카드에 반영해 탐색 흐름 유지
+- 주요 공개 프로젝트의 배포 최소 기준 정리 완료
+  - `signal-desk`: web/api compose + healthcheck
+  - `route-ops`: web/api compose + healthcheck
+  - `metro-pulse`: backend/frontend Docker 이미지
+  - `shelter-now`: backend/frontend Docker 이미지
+  - `emergency-room`: backend compose + frontend Docker 이미지
+  - `TripMemo`, `HomeHarmony`: Docker 실행 기준 보강
 - 기존 로그인 페이지는 내부 실험용으로 유지
 
 ## Quick Start
@@ -42,6 +49,26 @@ docker compose up --build
 - `restart: unless-stopped`와 healthcheck를 포함해 로컬/소형 서버 운영 기준으로 보강했다.
 - 공개 배포 시에는 `.env`에서 `PUBLIC_URL_*` 값을 실제 도메인으로 바꿔 허브 카드 링크를 맞춘다.
 - 자세한 절차는 [docs/deployment-playbook.md](./docs/deployment-playbook.md)에 정리했다.
+
+## Deployment Baseline
+현재 허브에서 연결하는 주요 공개 프로젝트는 아래 기준까지 정리된 상태다.
+
+- compose 기반 통합 실행
+  - `giwon-home`
+  - `signal-desk`
+  - `route-ops`
+  - `emergency-room-backend`
+- Docker 이미지 실행 기준
+  - `metro-pulse-backend`
+  - `metro-pulse-frontend`
+  - `shelter-now-backend`
+  - `shelter-now-frontend`
+  - `TripMemo`
+  - `HomeHarmony`
+- 남은 과제
+  - 외부 도메인/리버스 프록시 표준화
+  - GitHub Actions 기반 자동 배포
+  - 허브 프로젝트 카드의 공개 URL 일괄 실도메인 치환
 
 ## Required Backend
 - Start backend API first: `http://localhost:8081`
@@ -82,8 +109,8 @@ VITE_API_BASE_URL=http://localhost:8081
 VITE_ASSISTANT_API_BASE_URL=http://localhost:8080
 PUBLIC_URL_HOME=http://localhost:4173
 PUBLIC_URL_ASSISTANT=http://localhost:4173/assistant
-PUBLIC_URL_HOME_HARMONY=http://127.0.0.1:4174
-PUBLIC_URL_ROUTE_OPS=http://localhost:4173
+PUBLIC_URL_HOME_HARMONY=http://127.0.0.1:4179
+PUBLIC_URL_ROUTE_OPS=http://localhost:4174
 PUBLIC_URL_SIGNAL_DESK=http://localhost:4180
 ```
 
