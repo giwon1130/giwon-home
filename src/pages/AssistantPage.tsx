@@ -8,7 +8,7 @@ export function AssistantPage() {
     dailyCondition, dailyRoutine, weeklyReview, weeklyReviewHistory,
     title, setTitle, rawText, setRawText, tags, setTags, question, setQuestion,
     copilotAnswer, errorMessage, setErrorMessage,
-    isSubmitting, isAsking, isLoading, isRefreshing, isPlayingAudio, showFallbackReason, setShowFallbackReason,
+    isSubmitting, isAsking, isStreaming, streamingText, isLoading, isRefreshing, isPlayingAudio, showFallbackReason, setShowFallbackReason,
     expandedHistoryId, setExpandedHistoryId, expandedIdeaId, setExpandedIdeaId,
     editingIdeaId, editingTitle, setEditingTitle, editingRawText, setEditingRawText, editingTags, setEditingTags,
     editingActionId, editingActionPriority, setEditingActionPriority, editingActionDueDate, setEditingActionDueDate,
@@ -1340,8 +1340,8 @@ export function AssistantPage() {
                 placeholder="예: 오늘 뭐부터 하면 좋을까? 지금 열어둔 아이디어 중 뭘 먼저 진행할까?"
               />
             </label>
-            <button className="primary-button" type="submit" disabled={isAsking}>
-              {isAsking ? '답변 생성 중...' : '코파일럿에게 질문'}
+            <button className="primary-button" type="submit" disabled={isAsking || isStreaming}>
+              {isStreaming ? '스트리밍 중...' : isAsking ? '답변 생성 중...' : '코파일럿에게 질문'}
             </button>
           </form>
         </article>
@@ -1359,7 +1359,14 @@ export function AssistantPage() {
               </div>
             ) : null}
           </div>
-          {copilotAnswer ? (
+          {isStreaming && streamingText ? (
+            <div className="assistant-copilot-panel">
+              <div className="assistant-insight-panel">
+                <span className="control-label">Answer</span>
+                <p className="assistant-detail-text assistant-streaming-text">{streamingText}<span className="streaming-cursor" /></p>
+              </div>
+            </div>
+          ) : copilotAnswer ? (
             <div className="assistant-copilot-panel">
               <div className="assistant-insight-panel">
                 <span className="control-label">Question</span>

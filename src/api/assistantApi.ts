@@ -1,4 +1,4 @@
-import { assistantApiFetch, assistantApiFetchBlob } from './client'
+import { assistantApiFetch, assistantApiFetchBlob, assistantApiStream } from './client'
 import type {
   ApiResponse,
   AssistantBriefing,
@@ -41,6 +41,10 @@ export function askCopilotApi(question: string) {
     method: 'POST',
     body: JSON.stringify({ question }),
   })
+}
+
+export function askCopilotStreamApi(question: string) {
+  return assistantApiStream('/api/v1/copilot/ask/stream', { question })
 }
 
 export function getActionsApi(status?: 'OPEN' | 'DONE') {

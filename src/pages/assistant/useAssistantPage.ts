@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   askCopilotApi,
+  askCopilotStreamApi,
   createActionApi,
   createIdeaApi,
   getActionSummaryApi,
@@ -69,6 +70,8 @@ export function useAssistantPage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAsking, setIsAsking] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false)
+  const [streamingText, setStreamingText] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isPlayingAudio, setIsPlayingAudio] = useState(false)
@@ -514,15 +517,80 @@ export function useAssistantPage() {
     event.preventDefault()
     if (!question.trim()) { setErrorMessage('질문을 입력해줘.'); return }
     setIsAsking(true)
+    setIsStreaming(true)
+    setStreamingText('')
+    setCopilotAnswer(null)
+    const askedQuestion = question.trim()
+    setQuestion('')
+    setErrorMessage('')
     try {
-      const response = await askCopilotApi(question.trim())
-      if (!response.success || !response.data) throw new Error('ask')
-      setCopilotAnswer(response.data)
+      let accumulated = ''
+      let finalResponse: AssistantCopilotAskResponse | null = null
+      for await (const { event, data } of askCopilotStreamApi(askedQuestion)) {
+        if (event === 'token') {
+          accumulated += data
+          setStreamingText(accumulated)
+        } else if (event === 'done') {
+          setIsStreaming(false)
+          // Fetch the completed response from history to get full structured data
+          try {
+            const historyRes = await getCopilotHistoryApi()
+            if (historyRes.success && historyRes.data && historyRes.data.length > 0) {
+              const latest = historyRes.data[0]
+              finalResponse = {
+                question: latest.question,
+                answer: latest.answer,
+                intent: latest.intent,
+                reasoning: latest.reasoning,
+                suggestedActions: latest.suggestedActions,
+                suggestedActionPlans: [],
+                source: latest.source,
+                fallbackReason: null,
+                generatedAt: latest.generatedAt,
+              }
+              setCopilotAnswer(finalResponse)
+              setStreamingText('')
+              setCopilotHistory((previous) => [latest, ...previous.filter((h) => h.id !== latest.id)].slice(0, 10))
+            } else {
+              // No history available — show accumulated text only
+              setCopilotAnswer({
+                question: askedQuestion,
+                answer: accumulated,
+                intent: 'SUMMARY',
+                reasoning: [],
+                suggestedActions: [],
+                suggestedActionPlans: [],
+                source: 'STREAMING',
+                fallbackReason: null,
+                generatedAt: new Date().toISOString(),
+              })
+              setStreamingText('')
+            }
+          } catch {
+            setCopilotAnswer({
+              question: askedQuestion,
+              answer: accumulated,
+              intent: 'SUMMARY',
+              reasoning: [],
+              suggestedActions: [],
+              suggestedActionPlans: [],
+              source: 'STREAMING',
+              fallbackReason: null,
+              generatedAt: new Date().toISOString(),
+            })
+            setStreamingText('')
+          }
+        }
+      }
+      void finalResponse
       setShowFallbackReason(false)
-      setCopilotHistory((previous) => [{ id: `${response.data.generatedAt}-${response.data.question}`, question: response.data.question, answer: response.data.answer, intent: response.data.intent, reasoning: response.data.reasoning, suggestedActions: response.data.suggestedActions, source: response.data.source, generatedAt: response.data.generatedAt }, ...previous].slice(0, 10))
-      setQuestion(''); setErrorMessage('')
-    } catch { setErrorMessage('코파일럿 질문 처리에 실패했습니다.') }
-    finally { setIsAsking(false) }
+    } catch {
+      setIsStreaming(false)
+      setStreamingText('')
+      setErrorMessage('코파일럿 질문 처리에 실패했습니다.')
+    } finally {
+      setIsAsking(false)
+    }
   }
 
   const handleIdeaStatusChange = async (ideaId: string, status: 'OPEN' | 'IN_PROGRESS' | 'DONE') => {
@@ -708,7 +776,7 @@ export function useAssistantPage() {
     dailyCondition, dailyRoutine, weeklyReview, weeklyReviewHistory,
     title, setTitle, rawText, setRawText, tags, setTags, question, setQuestion,
     copilotAnswer, errorMessage, setErrorMessage,
-    isSubmitting, isAsking, isLoading, isRefreshing, isPlayingAudio, showFallbackReason, setShowFallbackReason,
+    isSubmitting, isAsking, isStreaming, streamingText, isLoading, isRefreshing, isPlayingAudio, showFallbackReason, setShowFallbackReason,
     expandedHistoryId, setExpandedHistoryId, expandedIdeaId, setExpandedIdeaId,
     editingIdeaId, editingTitle, setEditingTitle, editingRawText, setEditingRawText, editingTags, setEditingTags,
     editingActionId, editingActionPriority, setEditingActionPriority, editingActionDueDate, setEditingActionDueDate,

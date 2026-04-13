@@ -42,3 +42,38 @@ export async function assistantApiFetchBlob(path: string): Promise<Blob> {
   if (!response.ok) throw new Error(`HTTP ${response.status}`)
   return response.blob()
 }
+
+export async function* assistantApiStream(
+  path: string,
+  body: unknown,
+): AsyncGenerator<{ event: string; data: string }> {
+  const response = await fetch(`${ASSISTANT_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  })
+  if (!response.ok || !response.body) throw new Error(`HTTP ${response.status}`)
+
+  const reader = response.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() ?? ''
+
+    let eventName = ''
+    for (const line of lines) {
+      if (line.startsWith('event: ')) {
+        eventName = line.slice(7).trim()
+      } else if (line.startsWith('data: ')) {
+        const data = line.slice(6)
+        if (eventName) yield { event: eventName, data }
+        eventName = ''
+      }
+    }
+  }
+}
