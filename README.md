@@ -16,7 +16,9 @@
 - 프로젝트 카드별 `Live / Repository / Docs` 링크 노출
 - 대표 서비스의 최신 상태를 허브 카드에 반영해 탐색 흐름 유지
 - 주요 공개 프로젝트의 배포 최소 기준 정리 완료
-  - `signal-desk`: web/api compose + healthcheck
+  - `signal-desk`: api/app compose (웹은 signal-desk-app/src/web Expo 빌드로 통합, 라이브 미배포)
+  - `baby-log`: api/app/compose 루트 구성 + Railway 배포(api) + iOS TestFlight(app)
+  - `codie`: api MVP 골격(/v1/users/me 등) + app Phase 2 캘린더+TPO 진행 중
   - `route-ops`: web/api compose + healthcheck
   - `metro-pulse`: backend/frontend Docker 이미지
   - `shelter-now`: backend/frontend Docker 이미지
@@ -137,4 +139,4 @@ PUBLIC_URL_SIGNAL_DESK=http://localhost:4180
 - 공개 허브가 메인이고 로그인 기능은 보조 템플릿으로 남겨둔 상태다.
 - `docker-compose.yml`은 sibling repo `../giwon-home-api`, `../giwon-assistant-api`를 기준으로 전체 스택을 함께 띄운다.
 - 이후 서비스가 늘어나도 허브는 링크/프록시 진입점 역할만 유지하는 게 기본 원칙이다.
-- 예시로 `SignalDesk`처럼 웹/API/모바일이 분리된 서비스도 허브 카드 한 장으로 연결한다.
+- 예시로 `SignalDesk`처럼 웹/API/모바일이 분리된 서비스도 허브 카드 한 장으로 연결한다. `BabyLog`(api+app+compose), `Codie`(api+app 모노레포)도 동일 패턴으로 카드 한 장.
